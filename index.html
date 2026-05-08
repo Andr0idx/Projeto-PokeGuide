@@ -3520,13 +3520,20 @@
       }
 
       // Página: Batalha (recomenda o melhor membro do time contra um oponente)
-      function BattlePage() {
+      function BattlePage({
+        initialOpponent = '',
+        initialMode = 'pokemon',
+        initialBossCategory = 'gym',
+        initialBossId = '',
+        initialActiveSlotIndex = null,
+        onSessionChange,
+      } = {}) {
         const { status: speciesStatus, items: speciesItems } = usePokemonList();
         const [team] = usePersistentState(TEAM_STORAGE_KEY, DEFAULT_TEAM_STATE);
-        const [opponent, setOpponent] = useState('');
-        const [mode, setMode] = useState('pokemon');
-        const [bossCategory, setBossCategory] = useState('gym');
-        const [bossId, setBossId] = useState('');
+        const [opponent, setOpponent] = useState(String(initialOpponent ?? '').trim().toLowerCase());
+        const [mode, setMode] = useState(String(initialMode ?? 'pokemon') || 'pokemon');
+        const [bossCategory, setBossCategory] = useState(String(initialBossCategory ?? 'gym') || 'gym');
+        const [bossId, setBossId] = useState(String(initialBossId ?? '') || '');
 
         const versionGroupName = String(team?.versionGroupName ?? '').trim().toLowerCase();
         const gameOptions = useMemo(() => POKEDEX_BY_GAME.map((g) => ({ key: g.key, label: g.label })), []);
@@ -3584,14 +3591,45 @@
           }
         }, [mode, bossCategories.join('|'), bossCategory, bossesInCategory.length, bossId, selectedBoss?.id]);
 
+        const activeSlotIndexRef = useRef(initialActiveSlotIndex);
+        const userPickedRef = useRef(Number.isFinite(initialActiveSlotIndex));
+
+        const [analysis, setAnalysis] = useState({ status: 'idle', data: null });
+        const [activeSlotIndex, setActiveSlotIndex] = useState(Number.isFinite(initialActiveSlotIndex) ? initialActiveSlotIndex : null);
+        useEffect(() => {
+          activeSlotIndexRef.current = activeSlotIndex;
+        }, [activeSlotIndex]);
+
+        const setOpponentAndReset = (v) => {
+          userPickedRef.current = false;
+          setActiveSlotIndex(null);
+          setOpponent(String(v ?? '').trim().toLowerCase());
+        };
+
+        const selectSlot = (idx) => {
+          userPickedRef.current = true;
+          setActiveSlotIndex(idx);
+        };
+
         useEffect(() => {
           if (mode !== 'boss') return;
           const first = selectedBoss?.roster?.[0] || '';
-          if (first) setOpponent(first);
-        }, [mode, selectedBoss?.id]);
+          const roster = Array.isArray(selectedBoss?.roster) ? selectedBoss.roster : [];
+          const current = String(opponent ?? '').trim().toLowerCase();
+          if (first && (!current || !roster.includes(current))) setOpponentAndReset(first);
+        }, [mode, selectedBoss?.id, opponent]);
 
-        const [analysis, setAnalysis] = useState({ status: 'idle', data: null });
-        const [activeSlotIndex, setActiveSlotIndex] = useState(null);
+        useEffect(() => {
+          if (typeof onSessionChange !== 'function') return;
+          onSessionChange({
+            opponent,
+            mode,
+            bossCategory,
+            bossId,
+            activeSlotIndex,
+          });
+        }, [opponent, mode, bossCategory, bossId, activeSlotIndex, onSessionChange]);
+
         const targetOpponentRef = useRef('');
         const scrollYRef = useRef(0);
 
@@ -3617,7 +3655,7 @@
               setAnalysis({ status: 'success', data });
               const best = data?.rankedMembers?.[0] || null;
               if (Number.isFinite(best?.slotIndex) && targetOpponentRef.current === o) {
-                setActiveSlotIndex(best.slotIndex);
+                if (!userPickedRef.current) setActiveSlotIndex(best.slotIndex);
               }
               requestAnimationFrame(() => {
                 try {
@@ -3690,7 +3728,7 @@
                     {rest.length ? (
                       <div className="space-y-4">
                         {rest.map((m) => (
-                          <BattleSmallCard key={`${m.slotIndex}:${m.speciesName}`} member={m} onSelect={() => setActiveSlotIndex(m.slotIndex)} />
+                          <BattleSmallCard key={`${m.slotIndex}:${m.speciesName}`} member={m} onSelect={() => selectSlot(m.slotIndex)} />
                         ))}
                       </div>
                     ) : null}
@@ -3733,7 +3771,7 @@
                     {mode === 'pokemon' ? (
                       <PokemonPicker
                         value={opponent}
-                        onChange={(v) => setOpponent(v)}
+                        onChange={(v) => setOpponentAndReset(v)}
                         items={pickerItems}
                         loading={Boolean(selectedGame && teamDexStatus === 'loading') || speciesStatus === 'loading'}
                       />
@@ -3792,7 +3830,7 @@
                           apiName={p}
                           orderIndex={idx}
                           selected={opponent === p}
-                          onSelect={() => setOpponent(p)}
+                          onSelect={() => setOpponentAndReset(p)}
                         />
                       ))}
                     </div>
@@ -4929,6 +4967,11 @@
             ? initialNav.captureSession
             : { gameKey: '', pokemonName: '', placeFilter: '' }
         );
+        const [battleSession, setBattleSession] = useState(
+          initialNav?.battleSession && typeof initialNav.battleSession === 'object'
+            ? initialNav.battleSession
+            : { opponent: '', mode: 'pokemon', bossCategory: 'gym', bossId: '', activeSlotIndex: null }
+        );
         const captureNavReqIdRef = useRef(0);
         const [pokedexSession, setPokedexSession] = useState(
           initialNav?.pokedexSession && typeof initialNav.pokedexSession === 'object'
@@ -4943,6 +4986,7 @@
           typesQuery,
           captureNav,
           captureSession,
+          battleSession,
           pokedexSession,
         });
 
@@ -4958,6 +5002,11 @@
             next.captureSession && typeof next.captureSession === 'object'
               ? next.captureSession
               : { gameKey: '', pokemonName: '', placeFilter: '' }
+          );
+          setBattleSession(
+            next.battleSession && typeof next.battleSession === 'object'
+              ? next.battleSession
+              : { opponent: '', mode: 'pokemon', bossCategory: 'gym', bossId: '', activeSlotIndex: null }
           );
           setPokedexSession(
             next.pokedexSession && typeof next.pokedexSession === 'object'
@@ -5016,6 +5065,11 @@
           captureSession?.gameKey,
           captureSession?.pokemonName,
           captureSession?.placeFilter,
+          battleSession?.opponent,
+          battleSession?.mode,
+          battleSession?.bossCategory,
+          battleSession?.bossId,
+          battleSession?.activeSlotIndex,
           pokedexSession?.gameKey,
           pokedexSession?.numbering,
           pokedexSession?.visibleCount,
@@ -5355,7 +5409,14 @@
                     onNavigateCapture={onNavigateCapture}
                   />
                 ) : page === 'battle' ? (
-                  <BattlePage />
+                  <BattlePage
+                    initialOpponent={battleSession?.opponent || ''}
+                    initialMode={battleSession?.mode || 'pokemon'}
+                    initialBossCategory={battleSession?.bossCategory || 'gym'}
+                    initialBossId={battleSession?.bossId || ''}
+                    initialActiveSlotIndex={battleSession?.activeSlotIndex ?? null}
+                    onSessionChange={(s) => setBattleSession(s)}
+                  />
                 ) : page === 'dex' ? (
                   <PokedexPage
                     query={dexQuery}
