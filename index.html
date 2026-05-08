@@ -1502,14 +1502,14 @@
         return ReactDOM.createPortal(content, document.body);
       }
 
-      function TypePill({ label, fullWidth = false, size = 'md' }) {
+      function TypePill({ label, fullWidth = false, size = 'md', className = '' }) {
         const { base, suffix } = splitTypeLabel(label);
         const sizeClass = size === 'sm' ? 'px-2 py-0.5 text-xs' : 'px-3 py-1 text-sm';
         return (
           <span
             className={`border ${sizeClass} rounded-full font-semibold inline-flex items-center ${
               fullWidth ? 'w-full justify-center text-center' : ''
-            } ${getTypeClass(base)}`}
+            } ${getTypeClass(base)} ${className || ''}`}
           >
             {base}
             {suffix ? <span className="ml-1 text-xs opacity-80">{suffix.trim()}</span> : null}
@@ -1892,8 +1892,8 @@
               </div>
 
               <div className="mt-auto pt-6">
-                <div className="rounded-2xl border border-zinc-700">
-                  <table className="w-full table-fixed">
+                <div className="rounded-2xl border border-zinc-700 overflow-hidden">
+                  <table className="w-full table-fixed border-separate border-spacing-0">
                     <thead>
                       <tr className="bg-zinc-800 text-left">
                         <th className="p-2 lg:p-3 w-[34%]">Move</th>
@@ -1974,17 +1974,15 @@
                                   }}
                                   onMouseLeave={closeTooltip}
                                 >
-                                  <span
-                                    className={`block w-full ${incompatible ? 'rounded-full ring-1 ring-inset ring-red-400/30' : ''}`}
-                                  >
-                                    <TypePill label={row.type} fullWidth size="sm" />
+                                  <span className="block w-full">
+                                    <TypePill label={row.type} fullWidth size="sm" className={incompatible ? 'border-red-400/70' : ''} />
                                   </span>
                                 </span>
                               </td>
 
                               <td className="p-2 lg:p-3 align-middle">
-                                <span className={`block w-full ${incompatible ? 'rounded-full ring-1 ring-inset ring-red-400/30' : ''}`}>
-                                  <TypePill label={row.category} fullWidth size="sm" />
+                                <span className="block w-full">
+                                  <TypePill label={row.category} fullWidth size="sm" className={incompatible ? 'border-red-400/70' : ''} />
                                 </span>
                               </td>
 
@@ -2574,8 +2572,8 @@
                 </div>
               </div>
 
-              <div className="mt-5 rounded-2xl border border-zinc-700">
-                <table className="w-full table-fixed">
+              <div className="mt-5 rounded-2xl border border-zinc-700 overflow-hidden">
+                <table className="w-full table-fixed border-separate border-spacing-0">
                   <thead>
                     <tr className="bg-zinc-800 text-left">
                       <th className="p-2 lg:p-3 w-[34%]">Move</th>
@@ -2620,13 +2618,13 @@
                             <span className="block truncate">{row.name}</span>
                           </td>
                           <td className="p-2 lg:p-3 align-middle">
-                            <span className={`block w-full ${incompatible ? 'rounded-full ring-1 ring-inset ring-red-400/30' : ''}`}>
-                              <TypePill label={row.type} fullWidth size="sm" />
+                            <span className="block w-full">
+                              <TypePill label={row.type} fullWidth size="sm" className={incompatible ? 'border-red-400/70' : ''} />
                             </span>
                           </td>
                           <td className="p-2 lg:p-3 align-middle">
-                            <span className={`block w-full ${incompatible ? 'rounded-full ring-1 ring-inset ring-red-400/30' : ''}`}>
-                              <TypePill label={row.category} fullWidth size="sm" />
+                            <span className="block w-full">
+                              <TypePill label={row.category} fullWidth size="sm" className={incompatible ? 'border-red-400/70' : ''} />
                             </span>
                           </td>
                           <td className="p-2 lg:p-3 align-middle text-xs text-zinc-200 lg:hidden">
