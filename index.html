@@ -10,8 +10,8 @@
       href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Ccircle%20cx='32'%20cy='32'%20r='28'%20fill='%23111111'/%3E%3Cpath%20d='M4%2032a28%2028%200%200%201%2056%200'%20fill='%23ef4444'/%3E%3Cpath%20d='M4%2032a28%2028%200%200%200%2056%200'%20fill='%23ffffff'/%3E%3Crect%20x='8'%20y='29'%20width='48'%20height='6'%20rx='3'%20fill='%23111111'/%3E%3Ccircle%20cx='32'%20cy='32'%20r='10'%20fill='%23111111'/%3E%3Ccircle%20cx='32'%20cy='32'%20r='6'%20fill='%23ffffff'/%3E%3C/svg%3E"
     />
     <script src="https://cdn.tailwindcss.com"></script>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   </head>
   <body class="bg-zinc-900">
@@ -325,34 +325,6 @@
         return json;
       }
 
-      function pickMoveFlavorTextPtBrOras(flavorTextEntries) {
-        const entries = Array.isArray(flavorTextEntries) ? flavorTextEntries : [];
-
-        const pick = (langName, versionGroupName) =>
-          entries.find(
-            (e) =>
-              e?.language?.name === langName &&
-              (versionGroupName ? e?.version_group?.name === versionGroupName : true) &&
-              e?.flavor_text
-          );
-
-        for (const lang of POKEAPI_LANGS) {
-          const best = pick(lang, POKEAPI_ORAS_VERSION_GROUP);
-          if (best) return normalizePokeText(best.flavor_text);
-        }
-        for (const lang of POKEAPI_LANGS) {
-          const any = pick(lang, null);
-          if (any) return normalizePokeText(any.flavor_text);
-        }
-
-        const enOras = pick('en', POKEAPI_ORAS_VERSION_GROUP);
-        if (enOras) return normalizePokeText(enOras.flavor_text);
-        const enAny = pick('en', null);
-        if (enAny) return normalizePokeText(enAny.flavor_text);
-
-        return '';
-      }
-
       function pickMoveFlavorTextLocalizedPt(flavorTextEntries) {
         const entries = Array.isArray(flavorTextEntries) ? flavorTextEntries : [];
 
@@ -412,7 +384,7 @@
         return MOVE_DESC_PT_BR_OVERRIDES[key] || '';
       }
 
-      async function getMoveFlavorText(apiName) {
+      async function getMoveFlavorText(apiName, versionGroupName) {
         const name = String(apiName ?? '').trim().toLowerCase();
         if (!name) return '';
         const data = await cachedFetchJson(`${POKEAPI_BASE}/move/${name}`);
@@ -420,7 +392,16 @@
         if (pt) return pt;
         const override = moveDescOverridePtBr(name);
         if (override) return override;
-        return pickMoveFlavorTextPtBrOras(data?.flavor_text_entries);
+        const en = pickMoveFlavorTextEn(data?.flavor_text_entries, versionGroupName);
+        if (en) {
+          try {
+            const translated = await translateEnToPtBr(en);
+            return translated || en;
+          } catch {
+            return en;
+          }
+        }
+        return '';
       }
 
       function pickMoveFlavorTextEn(flavorTextEntries, versionGroupName) {
@@ -854,7 +835,7 @@
           }
 
           setState({ status: 'loading', text: '' });
-          const p = lang === 'en' ? getMoveFlavorTextEn(name, versionGroupName) : getMoveFlavorText(name);
+          const p = lang === 'en' ? getMoveFlavorTextEn(name, versionGroupName) : getMoveFlavorText(name, versionGroupName);
           p.then((text) => {
             if (cancelled) return;
             setState({ status: 'success', text });
