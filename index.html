@@ -17,7 +17,7 @@
   <body class="bg-zinc-900">
     <div id="root"></div>
     <script type="text/babel">
-      const { useEffect, useLayoutEffect, useMemo, useRef, useState } = React;
+      const { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } = React;
 
       // Projeto Pokémon (app em um arquivo só)
       // Pontos principais para customizar:
@@ -531,6 +531,10 @@
 
       const TRANSLATE_CACHE_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 180;
 
+      function allOriginsRaw(url) {
+        return `https://api.allorigins.win/raw?url=${encodeURIComponent(String(url ?? '').trim())}`;
+      }
+
       async function translateEnToPtBr(text) {
         const raw = normalizePokeText(text);
         if (!raw) return '';
@@ -545,9 +549,27 @@
           void 0;
         }
 
+        try {
+          const gUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=pt-br&dt=t&q=${encodeURIComponent(raw)}`;
+          const gData = await cachedFetchJsonWithPrefix(allOriginsRaw(gUrl), 'translate:v1', { maxAgeMs: TRANSLATE_CACHE_MAX_AGE_MS });
+          const parts = Array.isArray(gData?.[0]) ? gData[0] : [];
+          const translated = normalizePokeText(parts.map((p) => String(p?.[0] ?? '')).join(''));
+          if (translated && translated.toLowerCase() !== raw.toLowerCase()) return translated;
+        } catch {
+          void 0;
+        }
+
         const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(raw)}&langpair=en|pt-br`;
         try {
           const data = await cachedFetchJsonWithPrefix(url, 'translate:v1', { maxAgeMs: TRANSLATE_CACHE_MAX_AGE_MS });
+          const translated = normalizePokeText(data?.responseData?.translatedText);
+          return translated || '';
+        } catch {
+          void 0;
+        }
+
+        try {
+          const data = await cachedFetchJsonWithPrefix(allOriginsRaw(url), 'translate:v1', { maxAgeMs: TRANSLATE_CACHE_MAX_AGE_MS });
           const translated = normalizePokeText(data?.responseData?.translatedText);
           return translated || '';
         } catch {
@@ -3998,10 +4020,15 @@
 
         const defaultGameKey = String(team?.versionGroupName ?? '').trim().toLowerCase();
         const fallbackGameKey = defaultGameKey || String(POKEDEX_BY_GAME?.[0]?.key ?? '').trim().toLowerCase();
-        const [gameKey, setGameKey] = useState(fallbackGameKey);
-        const [pokemonName, setPokemonName] = useState('');
-        const [placeFilter, setPlaceFilter] = useState('');
+        const normalizedInitialGameKey = String(initialGameKey ?? '').trim().toLowerCase();
+        const normalizedInitialPokemonName = String(initialPokemonName ?? '').trim().toLowerCase();
+        const normalizedInitialPlaceFilter = String(initialPlaceFilter ?? '');
+
+        const [gameKey, setGameKey] = useState(normalizedInitialGameKey || fallbackGameKey);
+        const [pokemonName, setPokemonName] = useState(normalizedInitialPokemonName);
+        const [placeFilter, setPlaceFilter] = useState(normalizedInitialPlaceFilter);
         const skipClearOnGameChangeRef = useRef(false);
+        const didMountRef = useRef(false);
 
         const selectedGame = useMemo(() => POKEDEX_BY_GAME.find((g) => g.key === gameKey) || null, [gameKey]);
         const { status: dexStatus, entries: dexEntries } = usePokedexEntries(selectedGame?.pokedex);
@@ -4020,6 +4047,10 @@
         }, [selectedGame, dexEntries, speciesItems]);
 
         useEffect(() => {
+          if (!didMountRef.current) {
+            didMountRef.current = true;
+            return;
+          }
           if (skipClearOnGameChangeRef.current) {
             skipClearOnGameChangeRef.current = false;
             setPlaceFilter('');
@@ -4039,12 +4070,16 @@
           }
           if (p && p !== pokemonName) setPokemonName(p);
           if (f !== placeFilter) setPlaceFilter(f);
-        }, [initialGameKey, initialPokemonName, initialPlaceFilter, gameKey, pokemonName, placeFilter]);
+        }, [initialGameKey, initialPokemonName, initialPlaceFilter]);
 
         useEffect(() => {
           if (typeof onSessionChange !== 'function') return;
+          const g = String(initialGameKey ?? '').trim().toLowerCase();
+          const p = String(initialPokemonName ?? '').trim().toLowerCase();
+          if (g && g !== gameKey) return;
+          if (p && p !== pokemonName) return;
           onSessionChange({ gameKey, pokemonName, placeFilter });
-        }, [gameKey, pokemonName, placeFilter, onSessionChange]);
+        }, [gameKey, pokemonName, placeFilter, onSessionChange, initialGameKey, initialPokemonName]);
 
         const { status: pokeStatus, data: poke } = usePokemon(pokemonName);
         const { status: genusStatus, text: genusText } = useSpeciesGenus(pokemonName);
@@ -4961,6 +4996,9 @@
         );
         const prevPageRef = useRef(page);
 
+        const onCaptureSessionChange = useCallback((s) => setCaptureSession(s), [setCaptureSession]);
+        const onBattleSessionChange = useCallback((s) => setBattleSession(s), [setBattleSession]);
+
         const makeNavSnapshot = () => ({
           page,
           dexQuery,
@@ -5396,7 +5434,7 @@
                     initialBossCategory={battleSession?.bossCategory || 'gym'}
                     initialBossId={battleSession?.bossId || ''}
                     initialActiveSlotIndex={battleSession?.activeSlotIndex ?? null}
-                    onSessionChange={(s) => setBattleSession(s)}
+                    onSessionChange={onBattleSessionChange}
                   />
                 ) : page === 'dex' ? (
                   <PokedexPage
@@ -5429,7 +5467,7 @@
                     initialGameKey={captureSession?.gameKey || captureNav.gameKey}
                     initialPokemonName={captureSession?.pokemonName || captureNav.pokemonName}
                     initialPlaceFilter={captureSession?.placeFilter || ''}
-                    onSessionChange={(s) => setCaptureSession(s)}
+                    onSessionChange={onCaptureSessionChange}
                   />
                 ) : (
                   <TypeChartPage filter={typesQuery} setFilter={setTypesQuery} />
