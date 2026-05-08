@@ -1502,11 +1502,12 @@
         return ReactDOM.createPortal(content, document.body);
       }
 
-      function TypePill({ label, fullWidth = false }) {
+      function TypePill({ label, fullWidth = false, size = 'md' }) {
         const { base, suffix } = splitTypeLabel(label);
+        const sizeClass = size === 'sm' ? 'px-2 py-0.5 text-xs' : 'px-3 py-1 text-sm';
         return (
           <span
-            className={`border px-3 py-1 rounded-full text-sm font-semibold inline-flex items-center ${
+            className={`border ${sizeClass} rounded-full font-semibold inline-flex items-center ${
               fullWidth ? 'w-full justify-center text-center' : ''
             } ${getTypeClass(base)}`}
           >
@@ -1830,8 +1831,8 @@
               : genusText || '';
 
         return (
-          <div className="rounded-3xl border border-zinc-700 bg-zinc-900/50 shadow-2xl">
-            <div className="p-6 h-full">
+          <div className="rounded-3xl border border-zinc-700 bg-zinc-900/50 shadow-2xl h-full flex flex-col lg:min-h-[720px] min-w-0">
+            <div className="p-6 flex-1 flex flex-col min-w-0">
               <div className="grid grid-cols-1 md:grid-cols-[240px,1fr] gap-6 items-center md:items-start">
                 <div className="flex flex-col items-center">
                   {pokeStatus === 'loading' ? (
@@ -1843,7 +1844,7 @@
                   )}
                 </div>
 
-                <div className="flex-1 w-full">
+                <div className="flex-1 w-full min-w-0">
                   <div className="flex flex-col gap-3">
                     <div className="flex items-baseline justify-between gap-4">
                       <div className="flex-1">
@@ -1890,17 +1891,18 @@
                 </div>
               </div>
 
-              <div className="mt-6">
-                <div className="overflow-x-auto rounded-2xl border border-zinc-700">
-                  <table className="w-full">
+              <div className="mt-auto pt-6">
+                <div className="rounded-2xl border border-zinc-700">
+                  <table className="w-full table-fixed">
                     <thead>
                       <tr className="bg-zinc-800 text-left">
-                        <th className="p-3">Move</th>
-                        <th className="p-3">Tipo</th>
-                        <th className="p-3">Categoria</th>
-                        <th className="p-3">Power</th>
-                        <th className="p-3">ACC</th>
-                        <th className="p-3">PP</th>
+                        <th className="p-2 lg:p-3 w-[34%]">Move</th>
+                        <th className="p-2 lg:p-3 w-[16%]">Tipo</th>
+                        <th className="p-2 lg:p-3 w-[16%]">Categoria</th>
+                        <th className="p-2 lg:p-3 w-[34%] lg:hidden">Stats</th>
+                        <th className="hidden lg:table-cell p-2 lg:p-3 w-[12%]">Pwr</th>
+                        <th className="hidden lg:table-cell p-2 lg:p-3 w-[12%]">Acc</th>
+                        <th className="hidden lg:table-cell p-2 lg:p-3 w-[10%]">PP</th>
                       </tr>
                     </thead>
 
@@ -1922,8 +1924,8 @@
 
                           return (
                             <tr key={`${idx}:${api}`} className={`border-t border-zinc-700 bg-zinc-900/40 ${incompatible ? 'bg-red-500/5' : ''}`}>
-                              <td className="p-3 font-semibold">
-                                <div className="inline-flex items-center gap-2">
+                              <td className="p-2 lg:p-3 font-semibold align-middle">
+                                <div className="flex items-center gap-2 min-w-0">
                                   <button
                                     onClick={(e) => {
                                       e.preventDefault();
@@ -1938,7 +1940,7 @@
                                   </button>
 
                                   <span
-                                    className={`inline-flex items-center gap-2 transition-colors cursor-default ${
+                                    className={`min-w-0 flex-1 inline-flex items-center gap-2 transition-colors cursor-default leading-tight ${
                                       incompatible ? 'text-red-200' : 'hover:text-cyan-300'
                                     }`}
                                     onMouseEnter={(e) =>
@@ -1953,15 +1955,15 @@
                                     }
                                     onMouseLeave={closeTooltip}
                                   >
-                                    {row.name}
-                                    <span className="text-xs text-zinc-500">ⓘ</span>
+                                    <span className="truncate">{row.name}</span>
+                                    <span className="shrink-0 text-xs text-zinc-500">ⓘ</span>
                                   </span>
                                 </div>
                               </td>
 
-                              <td className="p-3">
+                              <td className="p-2 lg:p-3 align-middle">
                                 <span
-                                  className="inline-flex"
+                                  className="block w-full"
                                   onMouseEnter={(e) => {
                                     if (row.category === 'Status') return;
                                     setTooltip({
@@ -1972,21 +1974,28 @@
                                   }}
                                   onMouseLeave={closeTooltip}
                                 >
-                                  <span className={`w-[140px] ${incompatible ? 'rounded-full ring-1 ring-red-400/30' : ''}`}>
-                                    <TypePill label={row.type} fullWidth />
+                                  <span
+                                    className={`block w-full ${incompatible ? 'rounded-full ring-1 ring-inset ring-red-400/30' : ''}`}
+                                  >
+                                    <TypePill label={row.type} fullWidth size="sm" />
                                   </span>
                                 </span>
                               </td>
 
-                              <td className="p-3">
-                                <span className={`inline-flex w-[140px] ${incompatible ? 'rounded-full ring-1 ring-red-400/30' : ''}`}>
-                                  <TypePill label={row.category} fullWidth />
+                              <td className="p-2 lg:p-3 align-middle">
+                                <span className={`block w-full ${incompatible ? 'rounded-full ring-1 ring-inset ring-red-400/30' : ''}`}>
+                                  <TypePill label={row.category} fullWidth size="sm" />
                                 </span>
                               </td>
 
-                              <td className="p-3">{row.power}</td>
-                              <td className="p-3">{row.acc}</td>
-                              <td className="p-3">{row.pp}</td>
+                              <td className="p-2 lg:p-3 align-middle text-xs text-zinc-200 lg:hidden">
+                                <span className="truncate block">
+                                  {row.power} • {row.acc} • {row.pp}
+                                </span>
+                              </td>
+                              <td className="hidden lg:table-cell p-2 lg:p-3 align-middle">{row.power}</td>
+                              <td className="hidden lg:table-cell p-2 lg:p-3 align-middle">{row.acc}</td>
+                              <td className="hidden lg:table-cell p-2 lg:p-3 align-middle">{row.pp}</td>
                             </tr>
                           );
                         }
@@ -1996,7 +2005,7 @@
 
                         return (
                           <tr key={`empty:${idx}`} className="border-t border-zinc-700 bg-zinc-900/40">
-                            <td className="p-3" colSpan={6}>
+                            <td className="p-2 lg:p-3" colSpan={7}>
                               <input
                                 value={query}
                                 onChange={(e) =>
@@ -2138,7 +2147,7 @@
             {speciesStatus === 'error' ? (
               <div className="text-zinc-400 mb-6">Não foi possível carregar a lista de Pokémon.</div>
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
                 {slots.map((slot, idx) => (
                   <TeamSlotCard
                     key={`${idx}:${slot?.speciesName || ''}`}
@@ -2565,16 +2574,17 @@
                 </div>
               </div>
 
-              <div className="mt-5 overflow-x-auto rounded-2xl border border-zinc-700">
-                <table className="w-full">
+              <div className="mt-5 rounded-2xl border border-zinc-700">
+                <table className="w-full table-fixed">
                   <thead>
                     <tr className="bg-zinc-800 text-left">
-                      <th className="p-3">Move</th>
-                      <th className="p-3">Tipo</th>
-                      <th className="p-3">Categoria</th>
-                      <th className="p-3">Power</th>
-                      <th className="p-3">ACC</th>
-                      <th className="p-3">PP</th>
+                      <th className="p-2 lg:p-3 w-[34%]">Move</th>
+                      <th className="p-2 lg:p-3 w-[16%]">Tipo</th>
+                      <th className="p-2 lg:p-3 w-[16%]">Categoria</th>
+                      <th className="p-2 lg:p-3 w-[34%] lg:hidden">Stats</th>
+                      <th className="hidden lg:table-cell p-2 lg:p-3 w-[12%]">Pwr</th>
+                      <th className="hidden lg:table-cell p-2 lg:p-3 w-[12%]">Acc</th>
+                      <th className="hidden lg:table-cell p-2 lg:p-3 w-[10%]">PP</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -2583,7 +2593,7 @@
                       if (!api) {
                         return (
                           <tr key={`empty:${idx}`} className="border-t border-zinc-700 bg-zinc-900/40">
-                            <td className="p-3 text-zinc-500" colSpan={6}>
+                            <td className="p-2 lg:p-3 text-zinc-500" colSpan={7}>
                               Slot vazio
                             </td>
                           </tr>
@@ -2604,20 +2614,29 @@
 
                       return (
                         <tr key={`${idx}:${api}`} className={`border-t border-zinc-700 bg-zinc-900/40 ${incompatible ? 'bg-red-500/5' : ''}`}>
-                          <td className={`p-3 font-semibold ${incompatible ? 'text-red-200' : 'text-zinc-100'}`}>{row.name}</td>
-                          <td className="p-3">
-                            <span className={`inline-flex w-[140px] ${incompatible ? 'rounded-full ring-1 ring-red-400/30' : ''}`}>
-                              <TypePill label={row.type} fullWidth />
+                          <td
+                            className={`p-2 lg:p-3 font-semibold align-middle leading-tight ${incompatible ? 'text-red-200' : 'text-zinc-100'}`}
+                          >
+                            <span className="block truncate">{row.name}</span>
+                          </td>
+                          <td className="p-2 lg:p-3 align-middle">
+                            <span className={`block w-full ${incompatible ? 'rounded-full ring-1 ring-inset ring-red-400/30' : ''}`}>
+                              <TypePill label={row.type} fullWidth size="sm" />
                             </span>
                           </td>
-                          <td className="p-3">
-                            <span className={`inline-flex w-[140px] ${incompatible ? 'rounded-full ring-1 ring-red-400/30' : ''}`}>
-                              <TypePill label={row.category} fullWidth />
+                          <td className="p-2 lg:p-3 align-middle">
+                            <span className={`block w-full ${incompatible ? 'rounded-full ring-1 ring-inset ring-red-400/30' : ''}`}>
+                              <TypePill label={row.category} fullWidth size="sm" />
                             </span>
                           </td>
-                          <td className="p-3 text-zinc-100">{row.power}</td>
-                          <td className="p-3 text-zinc-100">{row.acc}</td>
-                          <td className="p-3 text-zinc-100">{row.pp}</td>
+                          <td className="p-2 lg:p-3 align-middle text-xs text-zinc-200 lg:hidden">
+                            <span className="truncate block">
+                              {row.power} • {row.acc} • {row.pp}
+                            </span>
+                          </td>
+                          <td className="hidden lg:table-cell p-2 lg:p-3 align-middle text-zinc-100">{row.power}</td>
+                          <td className="hidden lg:table-cell p-2 lg:p-3 align-middle text-zinc-100">{row.acc}</td>
+                          <td className="hidden lg:table-cell p-2 lg:p-3 align-middle text-zinc-100">{row.pp}</td>
                         </tr>
                       );
                     })}
@@ -4408,7 +4427,7 @@
         ];
 
         return (
-          <div className="min-h-screen bg-zinc-950 text-white">
+          <div className="min-h-screen bg-zinc-950 text-white overflow-x-hidden">
             <header className="fixed top-0 left-0 right-0 h-14 z-50 border-b border-zinc-800 bg-zinc-950/80 backdrop-blur">
               <div className="h-full flex items-center">
                 <div className="h-full flex items-center justify-center px-4 border-r border-zinc-800" style={{ width: isDesktop ? sidebarWidth : 56 }}>
@@ -4443,7 +4462,7 @@
                         <circle cx="12" cy="12" r="1.6" fill="#ffffff" opacity="0.95" />
                       </svg>
                     </span>
-                    <span className="font-black text-zinc-100 hidden sm:inline">Pokémon Team Guide</span>
+                    <span className="font-black text-zinc-100 hidden sm:inline">PokéGuide</span>
                   </button>
                   <div className="flex-1" />
                   {isDesktop ? topControls : null}
