@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Pokémon Omega Ruby Team Guide</title>
+    <title>PokéGuide Pokémon</title>
     <link
       rel="icon"
       type="image/svg+xml"
@@ -615,6 +615,36 @@
         return cachedFetchJson(`${POKEAPI_BASE}/pokemon-species/${name}`);
       }
 
+      function useSpeciesData(apiName) {
+        const [state, setState] = useState({ status: 'idle', data: null });
+
+        useEffect(() => {
+          let cancelled = false;
+          const name = String(apiName ?? '').trim().toLowerCase();
+          if (!name) {
+            setState({ status: 'idle', data: null });
+            return;
+          }
+
+          setState({ status: 'loading', data: null });
+          getSpeciesData(name)
+            .then((data) => {
+              if (cancelled) return;
+              setState({ status: 'success', data });
+            })
+            .catch(() => {
+              if (cancelled) return;
+              setState({ status: 'error', data: null });
+            });
+
+          return () => {
+            cancelled = true;
+          };
+        }, [apiName]);
+
+        return state;
+      }
+
       function pickBestSprite(pokemonData, shiny) {
         const other = pokemonData?.sprites?.other || {};
         const art = other['official-artwork'] || {};
@@ -1005,6 +1035,7 @@
         const slots = Array.isArray(teamSlots) ? teamSlots.slice(0, 6) : [];
         const members = await Promise.all(
           slots.map(async (slot, idx) => {
+            if (slot?.captured === false) return null;
             const speciesName = String(slot?.speciesName ?? '').trim().toLowerCase();
             if (!speciesName) return null;
 
@@ -1595,6 +1626,28 @@
         );
       }
 
+      function shortenText(text, maxLen) {
+        const s = normalizePokeText(text);
+        const n = Number.isFinite(maxLen) ? maxLen : 160;
+        if (!s) return '';
+        if (s.length <= n) return s;
+        return `${s.slice(0, Math.max(0, n - 1)).trimEnd()}…`;
+      }
+
+      function MoveStatusTooltipContent({ move, lang, versionGroupName }) {
+        const { status, text } = useMoveFlavorText(move?.apiName, { lang, versionGroupName });
+
+        if (status === 'loading') {
+          return <div className="text-sm text-zinc-200">Carregando...</div>;
+        }
+
+        if (status === 'error') {
+          return <div className="text-sm text-zinc-200">Não foi possível carregar agora.</div>;
+        }
+
+        return <div className="text-sm text-zinc-200 leading-relaxed">{shortenText(text || 'Sem descrição disponível.', 160)}</div>;
+      }
+
       function MoveTooltipContent({ move, lang, versionGroupName, learn }) {
         const { status, text } = useMoveFlavorText(move?.apiName, { lang, versionGroupName });
 
@@ -1750,10 +1803,41 @@
         );
       }
 
-      function TeamSlotCard({ slotIndex, slot, versionGroupName, versionGroupLabel, speciesItems, speciesLoading, onChangeSlot }) {
+      function TeamSlotCard({ slotIndex, slot, versionGroupName, versionGroupLabel, speciesItems, speciesLoading, onChangeSlot, onNavigateCapture }) {
         const apiName = String(slot?.speciesName ?? '').trim().toLowerCase();
         const { status: pokeStatus, data: poke } = usePokemon(apiName);
         const { status: genusStatus, text: genusText } = useSpeciesGenus(apiName);
+        const captured = slot?.captured !== false;
+        const { status: speciesStatus, data: speciesData } = useSpeciesData(apiName);
+
+        const gameFeatures = useMemo(() => {
+          const vg = String(versionGroupName ?? '').trim().toLowerCase();
+          if (!vg) return [];
+          const out = [];
+          if (vg === 'sun-moon' || vg === 'ultra-sun-ultra-moon') out.push({ key: 'zmove', label: 'Z-Move' });
+          if (vg === 'sword-shield') out.push({ key: 'dynamax', label: 'Dynamax' });
+          if (vg === 'scarlet-violet') out.push({ key: 'terastal', label: 'Terastal' });
+          return out;
+        }, [versionGroupName]);
+
+        const pokemonSpecial = useMemo(() => {
+          const vg = String(versionGroupName ?? '').trim().toLowerCase();
+          if (!vg || !apiName) return [];
+          const varieties = Array.isArray(speciesData?.varieties) ? speciesData.varieties : [];
+          const names = varieties.map((v) => String(v?.pokemon?.name ?? '').trim().toLowerCase()).filter(Boolean);
+          const out = [];
+          if ((vg === 'x-y' || vg === 'omega-ruby-alpha-sapphire' || vg === 'sun-moon' || vg === 'ultra-sun-ultra-moon') && names.some((n) => n.includes('-mega')))
+            out.push({ key: 'mega', label: 'Mega' });
+          if ((vg === 'x-y' || vg === 'omega-ruby-alpha-sapphire') && names.some((n) => n.includes('-primal'))) out.push({ key: 'primal', label: 'Primal' });
+          if (vg === 'sword-shield' && names.some((n) => n.endsWith('-gmax'))) out.push({ key: 'gmax', label: 'Gigantamax' });
+          return out;
+        }, [apiName, versionGroupName, speciesStatus, speciesData]);
+
+        const featureChips = useMemo(() => {
+          const map = new Map();
+          [...gameFeatures, ...pokemonSpecial].forEach((x) => map.set(x.key, x));
+          return Array.from(map.values());
+        }, [gameFeatures, pokemonSpecial]);
 
         const dexNumber = Number.isFinite(poke?.id) ? `#${String(poke.id).padStart(4, '0')}` : '';
 
@@ -1842,6 +1926,63 @@
                   ) : (
                     <div className="w-52 h-52 flex items-center justify-center text-zinc-500">Selecione um Pokémon</div>
                   )}
+
+                        {apiName ? (
+                          <div className="mt-4 w-full max-w-[220px]">
+                            <div className="inline-flex w-full rounded-xl border border-zinc-700 bg-zinc-900/20 p-0.5">
+                              <button
+                                type="button"
+                                onClick={() => onChangeSlot({ captured: true })}
+                                className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                                  captured ? 'bg-green-500/10 text-green-100' : 'text-zinc-300 hover:bg-zinc-800/40'
+                                }`}
+                              >
+                                Capturado
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => onChangeSlot({ captured: false })}
+                                className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                                  !captured ? 'bg-amber-500/10 text-amber-100' : 'text-zinc-300 hover:bg-zinc-800/40'
+                                }`}
+                              >
+                                Não capturado
+                              </button>
+                            </div>
+
+                            {!captured ? (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (!versionGroupName) return;
+                                  if (typeof onNavigateCapture !== 'function') return;
+                                  onNavigateCapture({ pokemonName: apiName, gameKey: versionGroupName });
+                                }}
+                                disabled={!versionGroupName || typeof onNavigateCapture !== 'function'}
+                                className="mt-3 w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-zinc-700 bg-zinc-800/30 text-zinc-200 hover:border-zinc-500 hover:bg-zinc-800/50 transition-colors font-semibold disabled:opacity-60 disabled:hover:border-zinc-700 disabled:hover:bg-zinc-800/30"
+                              >
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <path d="M12 21s7-4.5 7-11a7 7 0 0 0-14 0c0 6.5 7 11 7 11Z" />
+                                  <circle cx="12" cy="10" r="2.5" />
+                                </svg>
+                                Onde capturar
+                              </button>
+                            ) : null}
+
+                            {featureChips.length ? (
+                              <div className="mt-3 flex flex-wrap gap-2 justify-center">
+                                {featureChips.map((f) => (
+                                  <span
+                                    key={f.key}
+                                    className="inline-flex items-center px-2 py-0.5 rounded-full border border-zinc-700 bg-zinc-900/30 text-zinc-200 text-xs font-semibold"
+                                  >
+                                    {f.label}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : null}
+                          </div>
+                        ) : null}
                 </div>
 
                 <div className="flex-1 w-full min-w-0">
@@ -1866,7 +2007,7 @@
                     <div className="space-y-2">
                       <PokemonPicker
                         value={apiName}
-                        onChange={(v) => onChangeSlot({ speciesName: v, moveApiNames: [] })}
+                        onChange={(v) => onChangeSlot({ speciesName: v, moveApiNames: [], captured: true })}
                         items={speciesItems}
                         loading={Boolean(speciesLoading)}
                       />
@@ -1965,11 +2106,11 @@
                                 <span
                                   className="block w-full"
                                   onMouseEnter={(e) => {
-                                    if (row.category === 'Status') return;
+                                    const isStatus = row.category === 'Status';
                                     setTooltip({
-                                      kind: 'type',
+                                      kind: isStatus ? 'status' : 'type',
                                       anchorEl: e.currentTarget,
-                                      payload: row.type,
+                                      payload: isStatus ? row : row.type,
                                     });
                                   }}
                                   onMouseLeave={closeTooltip}
@@ -1981,7 +2122,14 @@
                               </td>
 
                               <td className="p-2 lg:p-3 align-middle">
-                                <span className="block w-full">
+                                <span
+                                  className="block w-full"
+                                  onMouseEnter={(e) => {
+                                    if (row.category !== 'Status') return;
+                                    setTooltip({ kind: 'status', anchorEl: e.currentTarget, payload: row });
+                                  }}
+                                  onMouseLeave={closeTooltip}
+                                >
                                   <TypePill label={row.category} fullWidth size="sm" className={incompatible ? 'border-red-400/70' : ''} />
                                 </span>
                               </td>
@@ -2040,6 +2188,11 @@
                     </div>
                   ) : tooltip?.kind === 'type' ? (
                     <MoveTypeTooltipContent type={tooltip.payload} />
+                  ) : tooltip?.kind === 'status' ? (
+                    <div className="w-80 max-w-full">
+                      <div className="text-xs font-black text-zinc-200 mb-2 truncate">{tooltip?.payload?.name || 'Efeito do move'}</div>
+                      <MoveStatusTooltipContent move={tooltip.payload} lang="pt" versionGroupName={versionGroupName} />
+                    </div>
                   ) : null}
                 </SmartTooltip>
 
@@ -2080,7 +2233,7 @@
       }
 
       // Página: Time (montagem do time + seleção de moves por jogo)
-      function TeamPage() {
+      function TeamPage({ onNavigateCapture } = {}) {
         const { status: speciesStatus, items: speciesItems } = usePokemonList();
         const [team, setTeam] = usePersistentState(TEAM_STORAGE_KEY, DEFAULT_TEAM_STATE);
 
@@ -2115,7 +2268,7 @@
         const updateSlot = (idx, patch) => {
           setTeam((prev) => {
             const slots = Array.isArray(prev?.slots) ? prev.slots.slice(0, 6) : [];
-            while (slots.length < 6) slots.push({ speciesName: '', moveApiNames: [] });
+            while (slots.length < 6) slots.push({ speciesName: '', moveApiNames: [], captured: true });
             slots[idx] = { ...slots[idx], ...patch };
             return { ...(prev || {}), slots };
           });
@@ -2156,6 +2309,7 @@
                     speciesItems={pickerItems}
                     speciesLoading={Boolean(selectedGame && teamDexStatus === 'loading')}
                     onChangeSlot={(patch) => updateSlot(idx, patch)}
+                    onNavigateCapture={onNavigateCapture}
                   />
                 ))}
               </div>
@@ -2164,22 +2318,34 @@
         );
       }
 
-      function MoveEffectChip({ label, mult, tone = 'neutral' }) {
+      function MoveEffectChip({ label, mult, tone = 'neutral', typeLabel = '', onMouseEnter, onMouseLeave }) {
+        const t = String(typeLabel ?? '').trim();
         const base =
+          tone === 'incompat'
+            ? 'border-red-400/30 bg-red-500/10 text-red-100'
+            : t
+              ? getTypeClass(t)
+              : 'border-zinc-700 bg-zinc-900/30 text-zinc-200';
+
+        const toneClass =
           tone === 'good'
-            ? 'border-green-400/30 bg-green-500/10 text-green-100'
-            : tone === 'bad'
-              ? 'border-amber-400/30 bg-amber-500/10 text-amber-100'
-              : tone === 'no'
-                ? 'border-red-400/30 bg-red-500/10 text-red-100'
-                : tone === 'incompat'
-                  ? 'border-red-400/30 bg-red-500/10 text-red-100'
-                  : 'border-zinc-700 bg-zinc-900/30 text-zinc-200';
+            ? ''
+            : tone === 'neutral'
+              ? 'opacity-90'
+              : tone === 'bad'
+                ? 'opacity-85'
+                : tone === 'no'
+                  ? 'opacity-80'
+                  : '';
 
         return (
-          <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-semibold ${base}`}>
+          <span
+            onMouseEnter={onMouseEnter}
+            onMouseLeave={onMouseLeave}
+            className={`inline-flex items-center justify-between gap-2 px-3 py-1 rounded-full border text-xs font-semibold w-full sm:w-[170px] max-w-full cursor-help ${base} ${toneClass}`}
+          >
             <span className="truncate">{label}</span>
-            {mult ? <span className="text-white/80 font-black">{mult}</span> : null}
+            {mult ? <span className="shrink-0 text-white/80 font-black">{mult}</span> : null}
           </span>
         );
       }
@@ -2229,7 +2395,7 @@
                 {good.length ? (
                   <div className="flex flex-wrap gap-2">
                     {good.map((m) => (
-                      <MoveEffectChip key={m.apiName} label={m.label} mult={formatMultiplier(m.multiplier)} tone="good" />
+                      <MoveEffectChip key={m.apiName} label={m.label} mult={formatMultiplier(m.multiplier)} tone="good" typeLabel={m.type} />
                     ))}
                   </div>
                 ) : null}
@@ -2237,7 +2403,7 @@
                 {ok.length ? (
                   <div className="flex flex-wrap gap-2">
                     {ok.map((m) => (
-                      <MoveEffectChip key={m.apiName} label={m.label} mult={formatMultiplier(m.multiplier)} tone="neutral" />
+                      <MoveEffectChip key={m.apiName} label={m.label} mult={formatMultiplier(m.multiplier)} tone="neutral" typeLabel={m.type} />
                     ))}
                   </div>
                 ) : null}
@@ -2245,7 +2411,7 @@
                 {bad.length ? (
                   <div className="flex flex-wrap gap-2">
                     {bad.map((m) => (
-                      <MoveEffectChip key={m.apiName} label={m.label} mult={formatMultiplier(m.multiplier)} tone="bad" />
+                      <MoveEffectChip key={m.apiName} label={m.label} mult={formatMultiplier(m.multiplier)} tone="bad" typeLabel={m.type} />
                     ))}
                   </div>
                 ) : null}
@@ -2253,7 +2419,7 @@
                 {noEff.length ? (
                   <div className="flex flex-wrap gap-2">
                     {noEff.map((m) => (
-                      <MoveEffectChip key={m.apiName} label={m.label} mult={formatMultiplier(m.multiplier)} tone="no" />
+                      <MoveEffectChip key={m.apiName} label={m.label} mult={formatMultiplier(m.multiplier)} tone="no" typeLabel={m.type} />
                     ))}
                   </div>
                 ) : null}
@@ -2261,7 +2427,7 @@
                 {incompat.length ? (
                   <div className="flex flex-wrap gap-2">
                     {incompat.map((m) => (
-                      <MoveEffectChip key={m.apiName} label={`${m.label} (incompatível)`} tone="incompat" />
+                      <MoveEffectChip key={m.apiName} label={`${m.label} (incompatível)`} tone="incompat" typeLabel={m.type} />
                     ))}
                   </div>
                 ) : null}
@@ -2289,7 +2455,7 @@
         );
       }
 
-      function BattleBestCard({ member, isBest }) {
+      function BattleBestCard({ member, isBest, versionGroupName }) {
         const apiName = String(member?.speciesName ?? '').trim().toLowerCase();
         const { status: pokeStatus, data: poke } = usePokemon(apiName);
         const { status: genusStatus, text: genusText } = useSpeciesGenus(apiName);
@@ -2343,6 +2509,10 @@
         const worstThreat = typeof member?.worstThreat === 'number' ? member.worstThreat : 1;
         const worstTypes = Array.isArray(member?.worstThreatTypes) ? member.worstThreatTypes : [];
 
+        const [moveTip, setMoveTip] = useState(null);
+        const moveTipOpen = Boolean(moveTip?.anchorEl);
+        const closeMoveTip = () => setMoveTip(null);
+
         return (
           <div className="rounded-3xl border border-zinc-700 bg-zinc-900/50 shadow-2xl p-6 ring-2 ring-cyan-400/40">
             <div className="flex items-center gap-4">
@@ -2381,19 +2551,88 @@
                 {good.length || ok.length || bad.length || noEff.length || incompat.length ? (
                   <div className="flex flex-wrap gap-2">
                     {good.map((m) => (
-                      <MoveEffectChip key={m.apiName} label={m.label} mult={formatMultiplier(m.multiplier)} tone="good" />
+                      <MoveEffectChip
+                        key={m.apiName}
+                        label={m.label}
+                        mult={formatMultiplier(m.multiplier)}
+                        tone="good"
+                        typeLabel={m.type}
+                        onMouseEnter={(e) =>
+                          setMoveTip({
+                            anchorEl: e.currentTarget,
+                            payload: m,
+                            learn: m.learn || (versionGroupName ? 'Não aprende nesse jogo' : ''),
+                          })
+                        }
+                        onMouseLeave={closeMoveTip}
+                      />
                     ))}
                     {ok.map((m) => (
-                      <MoveEffectChip key={m.apiName} label={m.label} mult={formatMultiplier(m.multiplier)} tone="neutral" />
+                      <MoveEffectChip
+                        key={m.apiName}
+                        label={m.label}
+                        mult={formatMultiplier(m.multiplier)}
+                        tone="neutral"
+                        typeLabel={m.type}
+                        onMouseEnter={(e) =>
+                          setMoveTip({
+                            anchorEl: e.currentTarget,
+                            payload: m,
+                            learn: m.learn || (versionGroupName ? 'Não aprende nesse jogo' : ''),
+                          })
+                        }
+                        onMouseLeave={closeMoveTip}
+                      />
                     ))}
                     {bad.map((m) => (
-                      <MoveEffectChip key={m.apiName} label={m.label} mult={formatMultiplier(m.multiplier)} tone="bad" />
+                      <MoveEffectChip
+                        key={m.apiName}
+                        label={m.label}
+                        mult={formatMultiplier(m.multiplier)}
+                        tone="bad"
+                        typeLabel={m.type}
+                        onMouseEnter={(e) =>
+                          setMoveTip({
+                            anchorEl: e.currentTarget,
+                            payload: m,
+                            learn: m.learn || (versionGroupName ? 'Não aprende nesse jogo' : ''),
+                          })
+                        }
+                        onMouseLeave={closeMoveTip}
+                      />
                     ))}
                     {noEff.map((m) => (
-                      <MoveEffectChip key={m.apiName} label={m.label} mult={formatMultiplier(m.multiplier)} tone="no" />
+                      <MoveEffectChip
+                        key={m.apiName}
+                        label={m.label}
+                        mult={formatMultiplier(m.multiplier)}
+                        tone="no"
+                        typeLabel={m.type}
+                        onMouseEnter={(e) =>
+                          setMoveTip({
+                            anchorEl: e.currentTarget,
+                            payload: m,
+                            learn: m.learn || (versionGroupName ? 'Não aprende nesse jogo' : ''),
+                          })
+                        }
+                        onMouseLeave={closeMoveTip}
+                      />
                     ))}
                     {incompat.map((m) => (
-                      <MoveEffectChip key={m.apiName} label={`${m.label} (incompatível)`} tone="incompat" />
+                      <MoveEffectChip
+                        key={m.apiName}
+                        label={`${m.label} (incompatível)`}
+                        tone="incompat"
+                        typeLabel={m.type}
+                        onMouseEnter={(e) =>
+                          setMoveTip({
+                            anchorEl: e.currentTarget,
+                            payload: m,
+                            learn: m.learn || (versionGroupName ? 'Não aprende nesse jogo' : ''),
+                          })
+                        }
+                        onMouseLeave={closeMoveTip}
+                      />
                     ))}
                   </div>
                 ) : (
@@ -2426,6 +2665,18 @@
                 )}
               </div>
             </div>
+
+            <SmartTooltip open={moveTipOpen} anchorEl={moveTip?.anchorEl}>
+              {moveTip?.payload ? (
+                <div className="w-80 max-w-full">
+                  <div className="grid grid-cols-2 gap-2 mb-3">
+                    <TypePill label={moveTip.payload.type} fullWidth />
+                    <TypePill label={moveTip.payload.category} fullWidth />
+                  </div>
+                  <MoveTooltipContent move={moveTip.payload} lang="pt" versionGroupName={versionGroupName} learn={moveTip?.learn} />
+                </div>
+              ) : null}
+            </SmartTooltip>
 
             {stats.length ? (
               <div className="mt-5 pt-5 border-t border-zinc-800/80">
@@ -2496,7 +2747,7 @@
                 {good.length ? (
                   <div className="mt-3 flex flex-wrap gap-2">
                     {good.slice(0, 2).map((m) => (
-                      <MoveEffectChip key={m.apiName} label={m.label} mult={formatMultiplier(m.multiplier)} tone="good" />
+                      <MoveEffectChip key={m.apiName} label={m.label} mult={formatMultiplier(m.multiplier)} tone="good" typeLabel={m.type} />
                     ))}
                     {good.length > 2 ? <MoveEffectChip label={`+${good.length - 2}`} tone="neutral" /> : null}
                   </div>
@@ -2539,6 +2790,11 @@
 
         const learnableMoves = useMemo(() => getLearnableMovesForVersionGroup(poke, versionGroupName), [poke, versionGroupName]);
         const learnableSet = useMemo(() => new Set((learnableMoves || []).map((m) => m.apiName)), [learnableMoves]);
+        const learnMap = useMemo(() => new Map((learnableMoves || []).map((m) => [m.apiName, m.learn])), [learnableMoves]);
+
+        const [tooltip, setTooltip] = useState(null);
+        const tooltipOpen = Boolean(tooltip?.anchorEl);
+        const closeTooltip = () => setTooltip(null);
 
         if (!apiName) {
           return (
@@ -2612,18 +2868,48 @@
 
                       return (
                         <tr key={`${idx}:${api}`} className={`border-t border-zinc-700 bg-zinc-900/40 ${incompatible ? 'bg-red-500/5' : ''}`}>
-                          <td
-                            className={`p-2 lg:p-3 font-semibold align-middle leading-tight ${incompatible ? 'text-red-200' : 'text-zinc-100'}`}
-                          >
-                            <span className="block truncate">{row.name}</span>
+                          <td className={`p-2 lg:p-3 font-semibold align-middle ${incompatible ? 'text-red-200' : 'text-zinc-100'}`}>
+                            <span
+                              className={`min-w-0 inline-flex items-center gap-2 transition-colors cursor-help leading-tight ${
+                                incompatible ? 'text-red-200' : 'hover:text-cyan-300'
+                              }`}
+                              onMouseEnter={(e) =>
+                                setTooltip({
+                                  kind: 'move',
+                                  anchorEl: e.currentTarget,
+                                  payload: row,
+                                  learn:
+                                    learnMap.get(row.apiName) ||
+                                    (versionGroupName && pokeStatus === 'success' ? 'Não aprende nesse jogo' : ''),
+                                })
+                              }
+                              onMouseLeave={closeTooltip}
+                            >
+                              <span className="truncate">{row.name}</span>
+                              <span className="shrink-0 text-xs text-zinc-500">ⓘ</span>
+                            </span>
                           </td>
                           <td className="p-2 lg:p-3 align-middle">
-                            <span className="block w-full">
+                            <span
+                              className="block w-full"
+                              onMouseEnter={(e) => {
+                                const isStatus = row.category === 'Status';
+                                setTooltip({ kind: isStatus ? 'status' : 'type', anchorEl: e.currentTarget, payload: isStatus ? row : row.type });
+                              }}
+                              onMouseLeave={closeTooltip}
+                            >
                               <TypePill label={row.type} fullWidth size="sm" className={incompatible ? 'border-red-400/70' : ''} />
                             </span>
                           </td>
                           <td className="p-2 lg:p-3 align-middle">
-                            <span className="block w-full">
+                            <span
+                              className="block w-full"
+                              onMouseEnter={(e) => {
+                                if (row.category !== 'Status') return;
+                                setTooltip({ kind: 'status', anchorEl: e.currentTarget, payload: row });
+                              }}
+                              onMouseLeave={closeTooltip}
+                            >
                               <TypePill label={row.category} fullWidth size="sm" className={incompatible ? 'border-red-400/70' : ''} />
                             </span>
                           </td>
@@ -2641,6 +2927,25 @@
                   </tbody>
                 </table>
               </div>
+
+              <SmartTooltip open={tooltipOpen} anchorEl={tooltip?.anchorEl}>
+                {tooltip?.kind === 'move' ? (
+                  <div className="w-80 max-w-full">
+                    <div className="grid grid-cols-2 gap-2 mb-3">
+                      <TypePill label={tooltip.payload.type} fullWidth />
+                      <TypePill label={tooltip.payload.category} fullWidth />
+                    </div>
+                    <MoveTooltipContent move={tooltip.payload} lang="pt" versionGroupName={versionGroupName} learn={tooltip?.learn} />
+                  </div>
+                ) : tooltip?.kind === 'type' ? (
+                  <MoveTypeTooltipContent type={tooltip.payload} />
+                ) : tooltip?.kind === 'status' ? (
+                  <div className="w-80 max-w-full">
+                    <div className="text-xs font-black text-zinc-200 mb-2 truncate">{tooltip?.payload?.name || 'Efeito do move'}</div>
+                    <MoveStatusTooltipContent move={tooltip.payload} lang="pt" versionGroupName={versionGroupName} />
+                  </div>
+                ) : null}
+              </SmartTooltip>
             </div>
           </div>
         );
@@ -2828,6 +3133,75 @@
         const k = String(trainerKey ?? '').trim().toLowerCase();
         if (!k) return '';
         return `https://play.pokemonshowdown.com/sprites/trainers/${encodeURIComponent(k)}.png`;
+      }
+
+      const CAPTURE_RESOLVE_VERSIONS_CACHE = new Map();
+      const CAPTURE_HAS_WILD_ENCOUNTER_CACHE = new Map();
+
+      async function getVersionsForVersionGroup(versionGroupName) {
+        const vg = String(versionGroupName ?? '').trim().toLowerCase();
+        if (!vg) return [];
+        if (CAPTURE_RESOLVE_VERSIONS_CACHE.has(vg)) return CAPTURE_RESOLVE_VERSIONS_CACHE.get(vg);
+        const data = await cachedFetchJson(`${POKEAPI_BASE}/version-group/${vg}`);
+        const list = Array.isArray(data?.versions) ? data.versions.map((v) => String(v?.name ?? '').trim().toLowerCase()).filter(Boolean) : [];
+        CAPTURE_RESOLVE_VERSIONS_CACHE.set(vg, list);
+        return list;
+      }
+
+      async function hasWildEncounterInVersions(pokemonApiName, versions) {
+        const name = String(pokemonApiName ?? '').trim().toLowerCase();
+        const list = Array.isArray(versions) ? versions : [];
+        if (!name || !list.length) return false;
+        const key = `${name}::${list.join('|')}`;
+        if (CAPTURE_HAS_WILD_ENCOUNTER_CACHE.has(key)) return CAPTURE_HAS_WILD_ENCOUNTER_CACHE.get(key);
+
+        let ok = false;
+        try {
+          const rows = await cachedFetchJson(`${POKEAPI_BASE}/pokemon/${name}/encounters`);
+          const versionSet = new Set(list);
+          const areas = Array.isArray(rows) ? rows : [];
+          ok = areas.some((a) => {
+            const vds = Array.isArray(a?.version_details) ? a.version_details : [];
+            return vds.some((vd) => versionSet.has(String(vd?.version?.name ?? '').trim().toLowerCase()));
+          });
+        } catch {
+          ok = false;
+        }
+
+        CAPTURE_HAS_WILD_ENCOUNTER_CACHE.set(key, ok);
+        return ok;
+      }
+
+      async function resolveCapturablePokemonForGame(pokemonApiName, versionGroupName) {
+        const start = String(pokemonApiName ?? '').trim().toLowerCase();
+        const vg = String(versionGroupName ?? '').trim().toLowerCase();
+        if (!start || !vg) return start;
+
+        const versions = await getVersionsForVersionGroup(vg);
+
+        const chain = [];
+        let cur = start;
+        for (let i = 0; i < 8; i += 1) {
+          chain.push(cur);
+          let species = null;
+          try {
+            species = await getSpeciesData(cur);
+          } catch {
+            species = null;
+          }
+          const prev = String(species?.evolves_from_species?.name ?? '').trim().toLowerCase();
+          if (!prev) break;
+          cur = prev;
+        }
+
+        if (versions.length) {
+          for (const candidate of chain) {
+            const can = await hasWildEncounterInVersions(candidate, versions);
+            if (can) return candidate;
+          }
+        }
+
+        return chain[chain.length - 1] || start;
       }
 
       function getBossRosters(versionGroupName) {
@@ -3056,6 +3430,11 @@
         }, [selectedGame, teamDexEntries, speciesItems]);
 
         const slots = Array.isArray(team?.slots) ? team.slots.slice(0, 6) : DEFAULT_TEAM_STATE.slots;
+        const visibleSlots = useMemo(() => {
+          return slots
+            .map((slot, idx) => ({ slot, idx }))
+            .filter(({ slot }) => slot?.captured !== false && String(slot?.speciesName ?? '').trim());
+        }, [slots]);
 
         const allBosses = useMemo(() => getBossRosters(versionGroupName), [versionGroupName]);
         const bossCategories = useMemo(() => {
@@ -3168,11 +3547,15 @@
 
                 {!opponent ? (
                   <div className="space-y-6">
-                    {slots.map((slot, idx) => (
-                      <div key={`${idx}:${slot?.speciesName || ''}`}>
-                        <BattleTeamCard slotIndex={idx} slot={slot} versionGroupName={versionGroupName} />
-                      </div>
-                    ))}
+                    {visibleSlots.length ? (
+                      visibleSlots.map(({ slot, idx }) => (
+                        <div key={`${idx}:${slot?.speciesName || ''}`}>
+                          <BattleTeamCard slotIndex={idx} slot={slot} versionGroupName={versionGroupName} />
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-zinc-400">Nenhum Pokémon capturado no time.</div>
+                    )}
                   </div>
                 ) : analysis.status === 'loading' ? (
                   <div className="text-zinc-400">Analisando seu time...</div>
@@ -3180,7 +3563,7 @@
                   <div className="text-zinc-400">Não foi possível calcular agora.</div>
                 ) : analysis.status === 'success' && focus ? (
                   <div className="space-y-6">
-                    <BattleBestCard member={focus} isBest={focusIsBest} />
+                    <BattleBestCard member={focus} isBest={focusIsBest} versionGroupName={versionGroupName} />
                     {rest.length ? (
                       <div className="space-y-4">
                         {rest.map((m) => (
@@ -4342,6 +4725,7 @@
         const [dexQuery, setDexQuery] = useState('');
         const [typesQuery, setTypesQuery] = useState('');
         const [captureNav, setCaptureNav] = useState({ gameKey: '', pokemonName: '' });
+        const captureNavReqIdRef = useRef(0);
         const [pokedexSession, setPokedexSession] = useState({
           gameKey: '',
           numbering: 'national',
@@ -4350,6 +4734,24 @@
           scrollY: 0,
         });
         const prevPageRef = useRef(page);
+
+        const onNavigateCapture = ({ pokemonName, gameKey }) => {
+          const p = String(pokemonName ?? '').trim().toLowerCase();
+          const vg = String(gameKey ?? '').trim().toLowerCase();
+          if (!p || !vg) return;
+          const reqId = (captureNavReqIdRef.current += 1);
+          resolveCapturablePokemonForGame(p, vg)
+            .then((resolved) => {
+              if (captureNavReqIdRef.current !== reqId) return;
+              setCaptureNav({ pokemonName: resolved || p, gameKey: vg });
+              setPage('capture');
+            })
+            .catch(() => {
+              if (captureNavReqIdRef.current !== reqId) return;
+              setCaptureNav({ pokemonName: p, gameKey: vg });
+              setPage('capture');
+            });
+        };
 
         const topSearch =
           page === 'dex'
@@ -4622,7 +5024,9 @@
             <main className="pt-14" style={{ paddingLeft: sidebarWidth }}>
               <div className="max-w-screen-2xl mx-auto p-6">
                 {page === 'team' ? (
-                  <TeamPage />
+                  <TeamPage
+                    onNavigateCapture={onNavigateCapture}
+                  />
                 ) : page === 'battle' ? (
                   <BattlePage />
                 ) : page === 'dex' ? (
@@ -4648,8 +5052,7 @@
                       }))
                     }
                     onNavigateCapture={({ pokemonName, gameKey }) => {
-                      setCaptureNav({ pokemonName: String(pokemonName ?? '').trim().toLowerCase(), gameKey: String(gameKey ?? '').trim().toLowerCase() });
-                      setPage('capture');
+                      onNavigateCapture({ pokemonName, gameKey });
                     }}
                   />
                 ) : page === 'capture' ? (
