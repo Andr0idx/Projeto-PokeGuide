@@ -19,14 +19,29 @@
     <script type="text/babel">
       const { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } = React;
 
-      // Projeto Pokémon (app em um arquivo só)
-      // Pontos principais para customizar:
+      // ============================================================
+      // PokéGuide (SPA em um arquivo só)
+      // ============================================================
+      // Organização geral do arquivo:
+      // 1) Utilidades (string, tipos, helpers de UI)
+      // 2) Cache/persistência (localStorage) + fetch com cache
+      // 3) PokeAPI (wrappers) + hooks (usePokemon, usePokedexEntries, etc.)
+      // 4) Dados estáticos (jogos/dex, bosses, mapas)
+      // 5) Componentes reutilizáveis (Pickers, Cards, Pills, Popovers)
+      // 6) Páginas (Time, Batalha, Captura, Pokédex, Tipos)
+      //
+      // Pontos principais para customizar (mais comuns):
       // - Jogos/Dex (selects e filtros): POKEDEX_BY_GAME
       // - Time inicial (slots e moves): DEFAULT_TEAM_STATE
-      // - Layout global (topbar/lateral): PokemonTeamGuide
+      // - Bosses/rosters por jogo: BOSS_ROSTERS_BY_VERSION_GROUP
       // - Captura (mapa por região): getRegionMapForPokedex
       // - Textos longos em PT-BR (Dex/descrições): useSpeciesFlavorText + useMoveFlavorText
+      //
+      // Dica: use Ctrl+F por "Página:" para navegar entre as páginas do app.
 
+      // ============================================================
+      // Utilidades gerais (UI, texto e matemática)
+      // ============================================================
       const TYPE_COLORS = {
         Grass: 'bg-green-500/20 border-green-400 text-green-200',
         Fire: 'bg-red-500/20 border-red-400 text-red-200',
@@ -51,10 +66,12 @@
         Special: 'bg-blue-600/20 border-blue-500 text-blue-100',
       };
 
+      // Retorna a classe Tailwind para uma "pílula" (tipo, categoria de move etc.).
       function getTypeClass(type) {
         return TYPE_COLORS[type] || 'bg-zinc-700 border-zinc-500 text-white';
       }
 
+      // Separa "Water x2" em { base: "Water", suffix: " x2" } para renderizar com estilos diferentes.
       function splitTypeLabel(label) {
         const trimmed = String(label ?? '').trim();
         const match = trimmed.match(/^([A-Za-z]+)(\s+x(?:\d+(?:\.\d+)?))?$/i);
@@ -62,10 +79,12 @@
         return { base: match[1], suffix: match[2] ?? '' };
       }
 
+      // clamp: garante que um número fique dentro de [min, max].
       function clamp(n, min, max) {
         return Math.max(min, Math.min(max, n));
       }
 
+      // Hook simples para detectar breakpoints/condições via matchMedia.
       function useMediaQuery(query) {
         const getMatch = () => {
           try {
@@ -142,6 +161,7 @@
         'u-turn': 'U-turn',
       };
 
+      // Converte nomes de API (ex.: "mr-mime") em título (ex.: "Mr Mime") para UI.
       function titleFromApiName(apiName) {
         const raw = String(apiName ?? '').trim().toLowerCase();
         if (!raw) return '';
@@ -156,6 +176,11 @@
           .join(' ');
       }
 
+      // ============================================================
+      // Cache e persistência (localStorage)
+      // ============================================================
+      // cacheGet/cacheSet: usado para dados "cacheáveis" (PokeAPI/translate).
+      // Estrutura armazenada: { ts: number, data: any }.
       function cacheGet(key, maxAgeMs) {
         try {
           const raw = localStorage.getItem(key);
@@ -170,6 +195,7 @@
         }
       }
 
+      // Remove as entradas mais antigas de cache para liberar espaço no localStorage.
       function evictCacheEntries(maxToDelete = 40) {
         try {
           const keys = [];
@@ -202,6 +228,7 @@
         }
       }
 
+      // localStorage pode falhar (quota / modo privado). Esse helper tenta evict e regravar.
       function safeLocalStorageSetItem(key, value) {
         try {
           localStorage.setItem(key, value);
@@ -217,6 +244,7 @@
         }
       }
 
+      // Salva em cache com timestamp (para expiração por idade).
       function cacheSet(key, data) {
         try {
           safeLocalStorageSetItem(key, JSON.stringify({ ts: Date.now(), data }));
@@ -235,6 +263,7 @@
         }
       }
 
+      // Persistência "durável" (sem expiração) para estado do app (ex.: time, sessões).
       function persistentSet(key, value) {
         try {
           safeLocalStorageSetItem(key, JSON.stringify(value));
@@ -243,6 +272,8 @@
         }
       }
 
+      // usePersistentState: useState + sync com localStorage + eventos (aba atual e outras abas).
+      // Ideal para dados que o usuário espera "ficarem salvos" (Time, sessão de Batalha/Captura).
       function usePersistentState(key, initialValue) {
         const [state, setState] = useState(() => {
           const saved = persistentGet(key);
@@ -296,6 +327,10 @@
         return [state, setAndPersist];
       }
 
+      // ============================================================
+      // Fetch com cache (PokeAPI)
+      // ============================================================
+      // cachedFetchJson: memoiza respostas em localStorage para reduzir latência e rate-limit.
       async function cachedFetchJson(url, { maxAgeMs = POKEAPI_CACHE_MAX_AGE_MS } = {}) {
         const cacheKey = `pokeapi:v1:${url}`;
         const cached = cacheGet(cacheKey, maxAgeMs);
@@ -310,6 +345,7 @@
         return json;
       }
 
+      // Variante com prefixo customizado (útil para cache com chaves que não são só "pokeapi:v1").
       async function cachedFetchJsonWithPrefix(url, cachePrefix, { maxAgeMs = POKEAPI_CACHE_MAX_AGE_MS } = {}) {
         const prefix = String(cachePrefix ?? '').trim();
         const cacheKey = `${prefix}:${url}`;
@@ -325,6 +361,14 @@
         return json;
       }
 
+      // ============================================================
+      // Textos (PT-BR) e traduções/overrides
+      // ============================================================
+      // A PokeAPI pode ter textos diferentes por versão e nem sempre existe PT-BR para tudo.
+      // Estratégia (resumo):
+      // - tenta PT-BR (priorizando ORAS, por ter boa cobertura)
+      // - se não achar, usa overrides manuais para alguns moves
+      // - se ainda não achar, cai no EN e tenta traduzir
       function pickMoveFlavorTextLocalizedPt(flavorTextEntries) {
         const entries = Array.isArray(flavorTextEntries) ? flavorTextEntries : [];
 
@@ -384,6 +428,7 @@
         return MOVE_DESC_PT_BR_OVERRIDES[key] || '';
       }
 
+      // Retorna o texto "longo" do move, com fallback inteligente (PT-BR -> override -> EN -> tradução).
       async function getMoveFlavorText(apiName, versionGroupName) {
         const name = String(apiName ?? '').trim().toLowerCase();
         if (!name) return '';
@@ -404,6 +449,7 @@
         return '';
       }
 
+      // Helper para extrair um texto EN "limpo" do move, preferindo o versionGroup atual.
       function pickMoveFlavorTextEn(flavorTextEntries, versionGroupName) {
         const entries = Array.isArray(flavorTextEntries) ? flavorTextEntries : [];
         const pick = (vg) =>
@@ -430,6 +476,7 @@
         froslass: 'Pokémon da Terra Nevada',
       };
 
+      // "Genus" é o subtítulo tipo "Pokémon Abraço". Aqui ficam correções pontuais em PT-BR.
       function speciesGenusOverridePtBr(apiName) {
         const key = String(apiName ?? '').trim().toLowerCase();
         return SPECIES_GENUS_PT_BR_OVERRIDES[key] || '';
@@ -2338,6 +2385,7 @@
         const { status: speciesStatus, items: speciesItems } = usePokemonList();
         const [team, setTeam] = usePersistentState(TEAM_STORAGE_KEY, DEFAULT_TEAM_STATE);
 
+        // O jogo selecionado no Time define a Dex e influencia várias páginas (Batalha/Captura).
         const versionGroupName = String(team?.versionGroupName ?? '').trim().toLowerCase();
         const gameOptions = useMemo(() => POKEDEX_BY_GAME.map((g) => ({ key: g.key, label: g.label })), []);
         const versionGroupLabel = useMemo(
@@ -2350,6 +2398,9 @@
         );
         const { status: teamDexStatus, entries: teamDexEntries } = usePokedexEntries(selectedGame?.pokedex);
 
+        // Lista de Pokémon mostrada nos pickers do Time:
+        // - se houver "selectedGame", usa a Dex do jogo
+        // - caso contrário, usa a lista geral de espécies
         const pickerItems = useMemo(() => {
           if (selectedGame) {
             const list = Array.isArray(teamDexEntries) ? teamDexEntries : [];
@@ -2362,6 +2413,7 @@
           return Array.isArray(speciesItems) ? speciesItems : [];
         }, [selectedGame, teamDexEntries, speciesItems]);
 
+        // Atualiza um slot do time, garantindo que existam sempre 6 slots persistidos.
         const updateSlot = (idx, patch) => {
           setTeam((prev) => {
             const slots = Array.isArray(prev?.slots) ? prev.slots.slice(0, 6) : [];
@@ -3185,6 +3237,13 @@
         );
       }
 
+      // ============================================================
+      // Bosses por jogo (rosters canônicos)
+      // ============================================================
+      // Esta tabela alimenta o modo "Bosses" na página de Batalha.
+      // Importante:
+      // - "roster" usa nomes da PokeAPI (apiName), em ordem.
+      // - "trainer" é uma chave de sprite (baseada em sprites do Pokémon Showdown).
       const BOSS_ROSTERS_BY_VERSION_GROUP = {
         'red-blue': [
           { id: 'gym-1-brock', category: 'gym', label: 'Brock', trainer: 'brock', roster: ['geodude', 'onix'] },
@@ -3482,6 +3541,9 @@
         return chain[chain.length - 1] || start;
       }
 
+      // Normaliza chaves de sprite de treinadores:
+      // - remove espaços/pontuação
+      // - padroniza alguns casos (ex.: "Lt. Surge")
       function normalizeTrainerSpriteKey(input) {
         const raw = String(input ?? '').trim().toLowerCase();
         if (!raw) return '';
@@ -3499,6 +3561,8 @@
         return cleaned;
       }
 
+      // Gera possíveis variações de chave para aumentar a chance de encontrar o sprite.
+      // Ex.: "phoebe" pode existir como "phoebe-gen3" etc.
       function trainerSpriteCandidates(key) {
         const k = normalizeTrainerSpriteKey(key);
         if (!k) return [];
@@ -3528,6 +3592,7 @@
         return unique;
       }
 
+      // Retorna a lista de bosses para o versionGroup, garantindo normalização de nomes.
       function getBossRosters(versionGroupName) {
         const vg = String(versionGroupName ?? '').trim().toLowerCase();
         const list = Array.isArray(BOSS_ROSTERS_BY_VERSION_GROUP[vg]) ? BOSS_ROSTERS_BY_VERSION_GROUP[vg] : [];
@@ -3546,6 +3611,8 @@
         return titleFromApiName(c);
       }
 
+      // Renderiza o ícone do boss (treinador).
+      // Tenta várias chaves e, se nenhuma funcionar, mostra um fallback textual (letra).
       function BossAvatar({ trainerKey, fallbackText, alt, className } = {}) {
         const label = String(alt ?? '');
         const text = String(fallbackText ?? '').slice(0, 1) || 'B';
@@ -3782,6 +3849,8 @@
         const [bossCategory, setBossCategory] = useState(String(initialBossCategory ?? 'gym') || 'gym');
         const [bossId, setBossId] = useState(String(initialBossId ?? '') || '');
 
+        // A Batalha sempre segue o jogo selecionado no Time.
+        // Isso faz o modo Boss carregar o roster correto do jogo.
         const versionGroupName = String(team?.versionGroupName ?? '').trim().toLowerCase();
         const gameOptions = useMemo(() => POKEDEX_BY_GAME.map((g) => ({ key: g.key, label: g.label })), []);
         const versionGroupLabel = useMemo(
@@ -3813,6 +3882,7 @@
             .filter(({ slot }) => slot?.captured !== false && String(slot?.speciesName ?? '').trim());
         }, [slots]);
 
+        // Carrega bosses configurados para o jogo atual (Ginásios / Elite 4 / Campeão).
         const allBosses = useMemo(() => getBossRosters(versionGroupName), [versionGroupName]);
         const bossCategories = useMemo(() => {
           const set = new Set(allBosses.map((b) => b.category).filter(Boolean));
@@ -4255,6 +4325,10 @@
         const { status: speciesStatus, items: speciesItems } = usePokemonList();
         const [team] = usePersistentState(TEAM_STORAGE_KEY, DEFAULT_TEAM_STATE);
 
+        // Regras de prioridade ao abrir Captura:
+        // - se vier "initialGameKey" (ex.: navegação da Pokédex), usa ele
+        // - caso contrário usa o jogo do Time
+        // - fallback final: primeiro jogo configurado
         const defaultGameKey = String(team?.versionGroupName ?? '').trim().toLowerCase();
         const fallbackGameKey = defaultGameKey || String(POKEDEX_BY_GAME?.[0]?.key ?? '').trim().toLowerCase();
         const normalizedInitialGameKey = String(initialGameKey ?? '').trim().toLowerCase();
@@ -4283,6 +4357,8 @@
           return Array.isArray(speciesItems) ? speciesItems : [];
         }, [selectedGame, dexEntries, speciesItems]);
 
+        // Ao trocar de jogo, limpa seleção/filtro para evitar estado incoerente.
+        // skipClearOnGameChangeRef é usado quando a troca vem da navegação com parâmetros.
         useEffect(() => {
           if (!didMountRef.current) {
             didMountRef.current = true;
@@ -4297,6 +4373,7 @@
           setPlaceFilter('');
         }, [gameKey]);
 
+        // Sincroniza props iniciais (navegação) com o estado interno.
         useEffect(() => {
           const g = String(initialGameKey ?? '').trim().toLowerCase();
           const p = String(initialPokemonName ?? '').trim().toLowerCase();
@@ -4309,6 +4386,7 @@
           if (f !== placeFilter) setPlaceFilter(f);
         }, [initialGameKey, initialPokemonName, initialPlaceFilter]);
 
+        // Informa o pai para persistir/restaurar sessão, evitando sobrescrever durante o sync inicial.
         useEffect(() => {
           if (typeof onSessionChange !== 'function') return;
           const g = String(initialGameKey ?? '').trim().toLowerCase();
@@ -5146,11 +5224,13 @@
 
       // Página: Tipos (matchups por tipo)
       function TypeChartPage({ filter: filterProp, setFilter: setFilterProp } = {}) {
+        // Este filtro é controlado opcionalmente pelo pai (PokemonTeamGuide) para preservar a busca ao navegar.
         const [filterState, setFilterState] = useState('');
         const filter = filterProp !== undefined ? filterProp : filterState;
         const setFilter = typeof setFilterProp === 'function' ? setFilterProp : setFilterState;
         const { status, types } = useTypeList();
 
+        // Filtra por substring (client-side), já que a lista de tipos é pequena.
         const filteredTypes = useMemo(() => {
           const f = filter.trim().toLowerCase();
           const list = Array.isArray(types) ? types : [];
@@ -5174,6 +5254,8 @@
 
       // Layout global (topbar fixa + sidebar retrátil + roteamento das abas)
       function PokemonTeamGuide() {
+        // initialNav: tenta restaurar estado via history.state (navegação interna),
+        // com fallback para hash (#team, #battle, etc.).
         const initialNav = useMemo(() => {
           try {
             const st = history?.state?.appNav;
@@ -5191,7 +5273,9 @@
           }
         }, []);
 
+        // page: aba atual.
         const [page, setPage] = useState(String(initialNav?.page || 'team'));
+        // ui: preferências de layout (ex.: sidebar colapsada).
         const [ui, setUi] = usePersistentState('ui:v1', { sidebarCollapsed: false });
         const sidebarCollapsed = Boolean(ui?.sidebarCollapsed);
         const isDesktop = useMediaQuery('(min-width: 1024px)');
@@ -5201,6 +5285,7 @@
         const dexControlsOpen = Boolean(dexControls?.anchorEl);
         const [team, setTeam] = usePersistentState(TEAM_STORAGE_KEY, DEFAULT_TEAM_STATE);
 
+        // navIndex: contador para diferenciar estados no history (útil para back/forward coerentes).
         const [navIndex, setNavIndex] = useState(() => {
           try {
             const n = Number(history?.state?.appNavIndex);
@@ -5212,20 +5297,24 @@
 
         const [dexQuery, setDexQuery] = useState(String(initialNav?.dexQuery || ''));
         const [typesQuery, setTypesQuery] = useState(String(initialNav?.typesQuery || ''));
+        // captureNav: parâmetros de navegação "pontual" (ex.: clique em "onde capturar" vindo do Time/Pokédex).
         const [captureNav, setCaptureNav] = useState(
           initialNav?.captureNav && typeof initialNav.captureNav === 'object' ? initialNav.captureNav : { gameKey: '', pokemonName: '' }
         );
+        // captureSession: estado persistível da página (jogo/pokémon/filtro de local).
         const [captureSession, setCaptureSession] = useState(
           initialNav?.captureSession && typeof initialNav.captureSession === 'object'
             ? initialNav.captureSession
             : { gameKey: '', pokemonName: '', placeFilter: '' }
         );
+        // battleSession: estado persistível da página (modo, boss selecionado, oponente e slot ativo).
         const [battleSession, setBattleSession] = useState(
           initialNav?.battleSession && typeof initialNav.battleSession === 'object'
             ? initialNav.battleSession
             : { opponent: '', mode: 'pokemon', bossCategory: 'gym', bossId: '', activeSlotIndex: null }
         );
         const captureNavReqIdRef = useRef(0);
+        // pokedexSession: mantém seleção e scroll ao voltar para a Pokédex.
         const [pokedexSession, setPokedexSession] = useState(
           initialNav?.pokedexSession && typeof initialNav.pokedexSession === 'object'
             ? initialNav.pokedexSession
@@ -5236,6 +5325,7 @@
         const onCaptureSessionChange = useCallback((s) => setCaptureSession(s), [setCaptureSession]);
         const onBattleSessionChange = useCallback((s) => setBattleSession(s), [setBattleSession]);
 
+        // Snapshot do estado necessário para restaurar via history.state.
         const makeNavSnapshot = () => ({
           page,
           dexQuery,
@@ -5246,6 +5336,7 @@
           pokedexSession,
         });
 
+        // Aplica um snapshot vindo do history (back/forward).
         const applyNavSnapshot = (snap) => {
           const next = snap && typeof snap === 'object' ? snap : {};
           setPage(String(next.page || 'team'));
