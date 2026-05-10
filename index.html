@@ -3186,6 +3186,51 @@
       }
 
       const BOSS_ROSTERS_BY_VERSION_GROUP = {
+        'red-blue': [
+          { id: 'gym-1-brock', category: 'gym', label: 'Brock', trainer: 'brock', roster: ['geodude', 'onix'] },
+          { id: 'gym-2-misty', category: 'gym', label: 'Misty', trainer: 'misty', roster: ['staryu', 'starmie'] },
+          { id: 'gym-3-lt-surge', category: 'gym', label: 'Lt. Surge', trainer: 'lt_surge', roster: ['voltorb', 'pikachu', 'raichu'] },
+          { id: 'gym-4-erika', category: 'gym', label: 'Erika', trainer: 'erika', roster: ['victreebel', 'tangela', 'vileplume'] },
+          { id: 'gym-5-koga', category: 'gym', label: 'Koga', trainer: 'koga', roster: ['koffing', 'muk', 'weezing'] },
+          { id: 'gym-6-sabrina', category: 'gym', label: 'Sabrina', trainer: 'sabrina', roster: ['kadabra', 'mr-mime', 'venomoth', 'alakazam'] },
+          { id: 'gym-7-blaine', category: 'gym', label: 'Blaine', trainer: 'blaine', roster: ['growlithe', 'ponyta', 'rapidash', 'arcanine'] },
+          { id: 'gym-8-giovanni', category: 'gym', label: 'Giovanni', trainer: 'giovanni', roster: ['rhyhorn', 'dugtrio', 'nidoking', 'rhydon'] },
+          { id: 'e4-lorelei', category: 'e4', label: 'Lorelei', trainer: 'lorelei', roster: ['dewgong', 'cloyster', 'slowbro', 'jynx', 'lapras'] },
+          { id: 'e4-bruno', category: 'e4', label: 'Bruno', trainer: 'bruno', roster: ['onix', 'hitmonchan', 'hitmonlee', 'machamp'] },
+          { id: 'e4-agatha', category: 'e4', label: 'Agatha', trainer: 'agatha', roster: ['gengar', 'golbat', 'haunter', 'arbok', 'gengar'] },
+          { id: 'e4-lance', category: 'e4', label: 'Lance', trainer: 'lance', roster: ['gyarados', 'dragonair', 'dragonite'] },
+          { id: 'champion-blue', category: 'champion', label: 'Champion (Rival)', trainer: 'blue', roster: ['pidgeot', 'alakazam', 'rhydon', 'exeggutor', 'arcanine', 'blastoise'] },
+        ],
+        'gold-silver': [
+          { id: 'gym-1-falkner', category: 'gym', label: 'Falkner', trainer: '', roster: ['pidgey', 'pidgeotto'] },
+          { id: 'gym-2-bugsy', category: 'gym', label: 'Bugsy', trainer: '', roster: ['metapod', 'kakuna', 'scyther'] },
+          { id: 'gym-3-whitney', category: 'gym', label: 'Whitney', trainer: '', roster: ['clefairy', 'miltank'] },
+          { id: 'gym-4-morty', category: 'gym', label: 'Morty', trainer: '', roster: ['gastly', 'haunter', 'gengar'] },
+          { id: 'gym-5-chuck', category: 'gym', label: 'Chuck', trainer: '', roster: ['primeape', 'poliwrath'] },
+          { id: 'gym-6-jasmine', category: 'gym', label: 'Jasmine', trainer: '', roster: ['magnemite', 'magnemite', 'steelix'] },
+          { id: 'gym-7-pryce', category: 'gym', label: 'Pryce', trainer: '', roster: ['seel', 'dewgong', 'piloswine'] },
+          { id: 'gym-8-clair', category: 'gym', label: 'Clair', trainer: '', roster: ['dragonair', 'dragonair', 'kingdra'] },
+          { id: 'e4-will', category: 'e4', label: 'Will', trainer: '', roster: ['xatu', 'jynx', 'exeggutor', 'slowbro'] },
+          { id: 'e4-koga', category: 'e4', label: 'Koga', trainer: '', roster: ['ariados', 'venomoth', 'muk', 'crobat'] },
+          { id: 'e4-bruno', category: 'e4', label: 'Bruno', trainer: '', roster: ['hitmontop', 'hitmonchan', 'hitmonlee', 'machamp'] },
+          { id: 'e4-karen', category: 'e4', label: 'Karen', trainer: '', roster: ['umbreon', 'vileplume', 'murkrow', 'gengar', 'houndoom'] },
+          { id: 'champion-lance', category: 'champion', label: 'Lance', trainer: '', roster: ['gyarados', 'dragonite', 'dragonite', 'aerodactyl', 'charizard'] },
+        ],
+        'ruby-sapphire': [
+          { id: 'gym-1-roxanne', category: 'gym', label: 'Roxanne', trainer: '', roster: ['geodude', 'nosepass'] },
+          { id: 'gym-2-brawly', category: 'gym', label: 'Brawly', trainer: '', roster: ['machop', 'makuhita'] },
+          { id: 'gym-3-wattson', category: 'gym', label: 'Wattson', trainer: '', roster: ['magnemite', 'voltorb', 'magneton'] },
+          { id: 'gym-4-flannery', category: 'gym', label: 'Flannery', trainer: '', roster: ['slugma', 'numel', 'torkoal'] },
+          { id: 'gym-5-norman', category: 'gym', label: 'Norman', trainer: '', roster: ['spinda', 'vigoroth', 'slaking'] },
+          { id: 'gym-6-winona', category: 'gym', label: 'Winona', trainer: '', roster: ['swellow', 'pelipper', 'skarmory', 'altaria'] },
+          { id: 'gym-7-tate-liza', category: 'gym', label: 'Tate & Liza', trainer: '', roster: ['xatu', 'claydol', 'lunatone', 'solrock'] },
+          { id: 'gym-8-wallace', category: 'gym', label: 'Wallace', trainer: '', roster: ['luvdisc', 'sealeo', 'seaking', 'milotic'] },
+          { id: 'e4-sidney', category: 'e4', label: 'Sidney', trainer: '', roster: ['mightyena', 'shiftry', 'cacturne', 'sharpedo', 'absol'] },
+          { id: 'e4-phoebe', category: 'e4', label: 'Phoebe', trainer: '', roster: ['dusclops', 'banette', 'sableye', 'banette', 'dusknoir'] },
+          { id: 'e4-glacia', category: 'e4', label: 'Glacia', trainer: '', roster: ['glalie', 'glalie', 'froslass', 'walrein', 'walrein'] },
+          { id: 'e4-drake', category: 'e4', label: 'Drake', trainer: '', roster: ['shelgon', 'altaria', 'kingdra', 'flygon', 'salamence'] },
+          { id: 'champion-steven', category: 'champion', label: 'Steven', trainer: '', roster: ['skarmory', 'claydol', 'aggron', 'cradily', 'armaldo', 'metagross'] },
+        ],
         'omega-ruby-alpha-sapphire': [
           { id: 'gym-1-roxanne', category: 'gym', label: 'Roxanne', trainer: 'roxanne-gen3', roster: ['geodude', 'nosepass'] },
           { id: 'gym-2-brawly', category: 'gym', label: 'Brawly', trainer: 'brawly-gen3', roster: ['machop', 'makuhita'] },
@@ -3215,6 +3260,150 @@
           { id: 'e4-agatha', category: 'e4', label: 'Agatha', trainer: 'agatha-gen3', roster: ['gengar', 'golbat', 'haunter', 'arbok', 'gengar'] },
           { id: 'e4-lance', category: 'e4', label: 'Lance', trainer: 'lance-gen3', roster: ['gyarados', 'dragonair', 'dragonair', 'aerodactyl', 'dragonite'] },
           { id: 'champion-blue', category: 'champion', label: 'Champion (Rival)', trainer: 'blue-gen3champion', roster: ['pidgeot', 'alakazam', 'rhydon', 'exeggutor', 'arcanine', 'blastoise'] },
+        ],
+        'diamond-pearl': [
+          { id: 'gym-1-roark', category: 'gym', label: 'Roark', trainer: '', roster: ['geodude', 'onix', 'cranidos'] },
+          { id: 'gym-2-gardenia', category: 'gym', label: 'Gardenia', trainer: '', roster: ['turtwig', 'cherubi', 'roserade'] },
+          { id: 'gym-3-maylene', category: 'gym', label: 'Maylene', trainer: '', roster: ['meditite', 'machoke', 'lucario'] },
+          { id: 'gym-4-crasher-wake', category: 'gym', label: 'Crasher Wake', trainer: '', roster: ['gyarados', 'quagsire', 'floatzel'] },
+          { id: 'gym-5-fantina', category: 'gym', label: 'Fantina', trainer: '', roster: ['drifblim', 'gengar', 'mismagius'] },
+          { id: 'gym-6-byron', category: 'gym', label: 'Byron', trainer: '', roster: ['magneton', 'steelix', 'bastiodon'] },
+          { id: 'gym-7-candice', category: 'gym', label: 'Candice', trainer: '', roster: ['snover', 'sneasel', 'piloswine', 'abomasnow'] },
+          { id: 'gym-8-volkner', category: 'gym', label: 'Volkner', trainer: '', roster: ['raichu', 'octillery', 'luxray', 'electivire'] },
+          { id: 'e4-aaron', category: 'e4', label: 'Aaron', trainer: '', roster: ['beautifly', 'dustox', 'heracross', 'vespiquen', 'drapion'] },
+          { id: 'e4-bertha', category: 'e4', label: 'Bertha', trainer: '', roster: ['whiscash', 'gliscor', 'golem', 'hippowdon'] },
+          { id: 'e4-flint', category: 'e4', label: 'Flint', trainer: '', roster: ['drifblim', 'rapidash', 'infernape', 'steelix'] },
+          { id: 'e4-lucian', category: 'e4', label: 'Lucian', trainer: '', roster: ['mr-mime', 'medicham', 'alakazam', 'bronzong'] },
+          { id: 'champion-cynthia', category: 'champion', label: 'Cynthia', trainer: '', roster: ['spiritomb', 'roserade', 'gastrodon', 'lucario', 'milotic', 'garchomp'] },
+        ],
+        'heartgold-soulsilver': [
+          { id: 'gym-1-falkner', category: 'gym', label: 'Falkner', trainer: '', roster: ['pidgey', 'pidgeotto'] },
+          { id: 'gym-2-bugsy', category: 'gym', label: 'Bugsy', trainer: '', roster: ['metapod', 'kakuna', 'scyther'] },
+          { id: 'gym-3-whitney', category: 'gym', label: 'Whitney', trainer: '', roster: ['clefairy', 'miltank'] },
+          { id: 'gym-4-morty', category: 'gym', label: 'Morty', trainer: '', roster: ['gastly', 'haunter', 'gengar'] },
+          { id: 'gym-5-chuck', category: 'gym', label: 'Chuck', trainer: '', roster: ['primeape', 'poliwrath'] },
+          { id: 'gym-6-jasmine', category: 'gym', label: 'Jasmine', trainer: '', roster: ['magnemite', 'magneton', 'steelix'] },
+          { id: 'gym-7-pryce', category: 'gym', label: 'Pryce', trainer: '', roster: ['seel', 'dewgong', 'piloswine'] },
+          { id: 'gym-8-clair', category: 'gym', label: 'Clair', trainer: '', roster: ['dragonair', 'dragonair', 'kingdra'] },
+          { id: 'e4-will', category: 'e4', label: 'Will', trainer: '', roster: ['xatu', 'jynx', 'exeggutor', 'slowbro'] },
+          { id: 'e4-koga', category: 'e4', label: 'Koga', trainer: '', roster: ['ariados', 'venomoth', 'muk', 'crobat'] },
+          { id: 'e4-bruno', category: 'e4', label: 'Bruno', trainer: '', roster: ['hitmontop', 'hitmonchan', 'hitmonlee', 'machamp'] },
+          { id: 'e4-karen', category: 'e4', label: 'Karen', trainer: '', roster: ['umbreon', 'vileplume', 'murkrow', 'gengar', 'houndoom'] },
+          { id: 'champion-lance', category: 'champion', label: 'Lance', trainer: '', roster: ['gyarados', 'dragonite', 'dragonite', 'aerodactyl', 'charizard'] },
+        ],
+        'black-white': [
+          { id: 'gym-1-striaton', category: 'gym', label: 'Striaton Trio', trainer: '', roster: ['lillipup', 'pansage', 'pansear', 'panpour'] },
+          { id: 'gym-2-lenora', category: 'gym', label: 'Lenora', trainer: '', roster: ['herdier', 'watchog'] },
+          { id: 'gym-3-burgh', category: 'gym', label: 'Burgh', trainer: '', roster: ['whirlipede', 'dwebble', 'leavanny'] },
+          { id: 'gym-4-elesa', category: 'gym', label: 'Elesa', trainer: '', roster: ['emolga', 'emolga', 'zebstrika'] },
+          { id: 'gym-5-clay', category: 'gym', label: 'Clay', trainer: '', roster: ['krokorok', 'palpitoad', 'excadrill'] },
+          { id: 'gym-6-skyla', category: 'gym', label: 'Skyla', trainer: '', roster: ['swoobat', 'unfezant', 'swanna'] },
+          { id: 'gym-7-brycen', category: 'gym', label: 'Brycen', trainer: '', roster: ['vanillish', 'cryogonal', 'beartic'] },
+          { id: 'gym-8-drayden', category: 'gym', label: 'Drayden', trainer: '', roster: ['fraxure', 'druddigon', 'haxorus'] },
+          { id: 'e4-shauntal', category: 'e4', label: 'Shauntal', trainer: '', roster: ['cofagrigus', 'golurk', 'chandelure'] },
+          { id: 'e4-grimsley', category: 'e4', label: 'Grimsley', trainer: '', roster: ['liepard', 'scrafty', 'krookodile', 'bisharp'] },
+          { id: 'e4-caitlin', category: 'e4', label: 'Caitlin', trainer: '', roster: ['reuniclus', 'musharna', 'sigilyph', 'gothitelle'] },
+          { id: 'e4-marshal', category: 'e4', label: 'Marshal', trainer: '', roster: ['throh', 'sawk', 'mienshao', 'conkeldurr'] },
+          { id: 'champion-alder', category: 'champion', label: 'Alder', trainer: '', roster: ['accelgor', 'vanilluxe', 'escavalier', 'bouffalant', 'druddigon', 'volcarona'] },
+        ],
+        'black2-white2': [
+          { id: 'gym-1-cheren', category: 'gym', label: 'Cheren', trainer: '', roster: ['patrat', 'lillipup'] },
+          { id: 'gym-2-roxie', category: 'gym', label: 'Roxie', trainer: '', roster: ['koffing', 'whirlipede'] },
+          { id: 'gym-3-burgh', category: 'gym', label: 'Burgh', trainer: '', roster: ['dwebble', 'leavanny', 'scolipede'] },
+          { id: 'gym-4-elesa', category: 'gym', label: 'Elesa', trainer: '', roster: ['emolga', 'flaaffy', 'zebstrika'] },
+          { id: 'gym-5-clay', category: 'gym', label: 'Clay', trainer: '', roster: ['krokorok', 'palpitoad', 'excadrill'] },
+          { id: 'gym-6-skyla', category: 'gym', label: 'Skyla', trainer: '', roster: ['swoobat', 'skarmory', 'swanna'] },
+          { id: 'gym-7-drayden', category: 'gym', label: 'Drayden', trainer: '', roster: ['fraxure', 'druddigon', 'haxorus'] },
+          { id: 'gym-8-marlon', category: 'gym', label: 'Marlon', trainer: '', roster: ['carracosta', 'wailord', 'jellicent'] },
+          { id: 'e4-shauntal', category: 'e4', label: 'Shauntal', trainer: '', roster: ['cofagrigus', 'golurk', 'chandelure'] },
+          { id: 'e4-grimsley', category: 'e4', label: 'Grimsley', trainer: '', roster: ['liepard', 'scrafty', 'krookodile', 'bisharp'] },
+          { id: 'e4-caitlin', category: 'e4', label: 'Caitlin', trainer: '', roster: ['reuniclus', 'sigilyph', 'gothitelle', 'metagross'] },
+          { id: 'e4-marshal', category: 'e4', label: 'Marshal', trainer: '', roster: ['throh', 'sawk', 'mienshao', 'conkeldurr'] },
+          { id: 'champion-iris', category: 'champion', label: 'Iris', trainer: '', roster: ['hydreigon', 'druddigon', 'archeops', 'aggron', 'lapras', 'haxorus'] },
+        ],
+        'x-y': [
+          { id: 'gym-1-viola', category: 'gym', label: 'Viola', trainer: '', roster: ['surskit', 'vivillon'] },
+          { id: 'gym-2-grant', category: 'gym', label: 'Grant', trainer: '', roster: ['amaura', 'tyrunt'] },
+          { id: 'gym-3-korrina', category: 'gym', label: 'Korrina', trainer: '', roster: ['mienfoo', 'machoke', 'hawlucha'] },
+          { id: 'gym-4-ramos', category: 'gym', label: 'Ramos', trainer: '', roster: ['weepinbell', 'jumpluff', 'googoat'] },
+          { id: 'gym-5-clemont', category: 'gym', label: 'Clemont', trainer: '', roster: ['emolga', 'magneton', 'heliolisk'] },
+          { id: 'gym-6-valerie', category: 'gym', label: 'Valerie', trainer: '', roster: ['mawile', 'mr-mime', 'sylveon'] },
+          { id: 'gym-7-olympia', category: 'gym', label: 'Olympia', trainer: '', roster: ['sigilyph', 'slowking', 'meowstic-female'] },
+          { id: 'gym-8-wulfric', category: 'gym', label: 'Wulfric', trainer: '', roster: ['abomasnow', 'cryogonal', 'avalugg'] },
+          { id: 'e4-malva', category: 'e4', label: 'Malva', trainer: '', roster: ['pyroar', 'talonflame', 'houndoom', 'chandelure'] },
+          { id: 'e4-siebold', category: 'e4', label: 'Siebold', trainer: '', roster: ['clawitzer', 'barbaracle', 'starmie', 'gyarados'] },
+          { id: 'e4-wikstrom', category: 'e4', label: 'Wikstrom', trainer: '', roster: ['klefki', 'scizor', 'aegislash', 'probopass'] },
+          { id: 'e4-drasna', category: 'e4', label: 'Drasna', trainer: '', roster: ['dragalge', 'druddigon', 'altaria', 'noivern'] },
+          { id: 'champion-diantha', category: 'champion', label: 'Diantha', trainer: '', roster: ['hawlucha', 'tyrantrum', 'aurorus', 'gourgeist', 'goodra', 'gardevoir'] },
+        ],
+        'sun-moon': [
+          { id: 'kahuna-hala', category: 'kahuna', label: 'Hala', trainer: '', roster: ['hariyama', 'primeape', 'crabominable'] },
+          { id: 'kahuna-olivia', category: 'kahuna', label: 'Olivia', trainer: '', roster: ['nosepass', 'lycanroc-midday'] },
+          { id: 'kahuna-nanu', category: 'kahuna', label: 'Nanu', trainer: '', roster: ['sableye', 'krokorok', 'persian-alola'] },
+          { id: 'kahuna-hapu', category: 'kahuna', label: 'Hapu', trainer: '', roster: ['golem', 'mudsdale', 'flygon'] },
+          { id: 'e4-molayne', category: 'e4', label: 'Molayne', trainer: '', roster: ['skarmory', 'metagross', 'klefki'] },
+          { id: 'e4-olivia', category: 'e4', label: 'Olivia', trainer: '', roster: ['carbink', 'golem', 'lycanroc-midday', 'probopass'] },
+          { id: 'e4-acerola', category: 'e4', label: 'Acerola', trainer: '', roster: ['sableye', 'drifblim', 'palossand', 'froslass'] },
+          { id: 'e4-kahili', category: 'e4', label: 'Kahili', trainer: '', roster: ['skarmory', 'crobat', 'mandibuzz', 'toucannon'] },
+          { id: 'champion-kukui', category: 'champion', label: 'Kukui', trainer: '', roster: ['lycanroc-midday', 'snorlax', 'braviary', 'magnezone', 'ninetales-alola', 'incineroar'] },
+        ],
+        'ultra-sun-ultra-moon': [
+          { id: 'e4-molayne', category: 'e4', label: 'Molayne', trainer: '', roster: ['skarmory', 'metagross', 'klefki', 'bisharp'] },
+          { id: 'e4-olivia', category: 'e4', label: 'Olivia', trainer: '', roster: ['carbink', 'golem', 'lycanroc-midday', 'probopass'] },
+          { id: 'e4-acerola', category: 'e4', label: 'Acerola', trainer: '', roster: ['sableye', 'drifblim', 'palossand', 'froslass'] },
+          { id: 'e4-kahili', category: 'e4', label: 'Kahili', trainer: '', roster: ['skarmory', 'crobat', 'mandibuzz', 'toucannon'] },
+          { id: 'champion-hau', category: 'champion', label: 'Hau', trainer: '', roster: ['raichu-alola', 'noivern', 'crabominable', 'tauros', 'kommo-o', 'decidueye'] },
+        ],
+        'sword-shield': [
+          { id: 'gym-1-milo', category: 'gym', label: 'Milo', trainer: '', roster: ['gossifleur', 'eldegoss'] },
+          { id: 'gym-2-nessa', category: 'gym', label: 'Nessa', trainer: '', roster: ['goldeen', 'arrokuda', 'drednaw'] },
+          { id: 'gym-3-kabu', category: 'gym', label: 'Kabu', trainer: '', roster: ['ninetales', 'arcanine', 'centiskorch'] },
+          { id: 'gym-4-bea', category: 'gym', label: 'Bea (Sword)', trainer: '', roster: ['hitmontop', 'pangoro', 'sirfetchd', 'machamp'] },
+          { id: 'gym-4-allister', category: 'gym', label: 'Allister (Shield)', trainer: '', roster: ['gengar', 'cursola', 'mimikyu', 'runerigus'] },
+          { id: 'gym-5-opal', category: 'gym', label: 'Opal', trainer: '', roster: ['weezing-galar', 'mawile', 'togekiss', 'alcremie'] },
+          { id: 'gym-6-gordie', category: 'gym', label: 'Gordie (Sword)', trainer: '', roster: ['barbaracle', 'shuckle', 'stonjourner', 'coalossal'] },
+          { id: 'gym-6-melony', category: 'gym', label: 'Melony (Shield)', trainer: '', roster: ['frosmoth', 'darmanitan-galar-standard', 'eiscue-ice', 'lapras'] },
+          { id: 'gym-7-piers', category: 'gym', label: 'Piers', trainer: '', roster: ['skuntank', 'malamar', 'scrafty', 'obstagoon'] },
+          { id: 'gym-8-raihan', category: 'gym', label: 'Raihan', trainer: '', roster: ['torkoal', 'goodra', 'flygon', 'duraludon'] },
+          { id: 'e4-rose', category: 'e4', label: 'Chairman Rose', trainer: '', roster: ['ferrothorn', 'perrserker', 'klinklang', 'copperajah'] },
+          { id: 'champion-leon', category: 'champion', label: 'Leon', trainer: '', roster: ['aegislash', 'haxorus', 'dragapult', 'rillaboom', 'cinderace', 'charizard'] },
+        ],
+        'brilliant-diamond-shining-pearl': [
+          { id: 'gym-1-roark', category: 'gym', label: 'Roark', trainer: '', roster: ['geodude', 'onix', 'cranidos'] },
+          { id: 'gym-2-gardenia', category: 'gym', label: 'Gardenia', trainer: '', roster: ['turtwig', 'cherubi', 'roserade'] },
+          { id: 'gym-3-maylene', category: 'gym', label: 'Maylene', trainer: '', roster: ['meditite', 'machoke', 'lucario'] },
+          { id: 'gym-4-crasher-wake', category: 'gym', label: 'Crasher Wake', trainer: '', roster: ['gyarados', 'quagsire', 'floatzel'] },
+          { id: 'gym-5-fantina', category: 'gym', label: 'Fantina', trainer: '', roster: ['drifblim', 'gengar', 'mismagius'] },
+          { id: 'gym-6-byron', category: 'gym', label: 'Byron', trainer: '', roster: ['magneton', 'steelix', 'bastiodon'] },
+          { id: 'gym-7-candice', category: 'gym', label: 'Candice', trainer: '', roster: ['snover', 'sneasel', 'piloswine', 'abomasnow'] },
+          { id: 'gym-8-volkner', category: 'gym', label: 'Volkner', trainer: '', roster: ['raichu', 'octillery', 'luxray', 'electivire'] },
+          { id: 'e4-aaron', category: 'e4', label: 'Aaron', trainer: '', roster: ['beautifly', 'dustox', 'heracross', 'vespiquen', 'drapion'] },
+          { id: 'e4-bertha', category: 'e4', label: 'Bertha', trainer: '', roster: ['whiscash', 'gliscor', 'golem', 'hippowdon'] },
+          { id: 'e4-flint', category: 'e4', label: 'Flint', trainer: '', roster: ['drifblim', 'rapidash', 'infernape', 'steelix'] },
+          { id: 'e4-lucian', category: 'e4', label: 'Lucian', trainer: '', roster: ['mr-mime', 'medicham', 'alakazam', 'bronzong'] },
+          { id: 'champion-cynthia', category: 'champion', label: 'Cynthia', trainer: '', roster: ['spiritomb', 'roserade', 'gastrodon', 'lucario', 'milotic', 'garchomp'] },
+        ],
+        'legends-arceus': [
+          { id: 'noble-kleavor', category: 'noble', label: 'Nobre: Kleavor', trainer: '', roster: ['kleavor'] },
+          { id: 'noble-lilligant', category: 'noble', label: 'Nobre: Lilligant', trainer: '', roster: ['lilligant-hisui'] },
+          { id: 'noble-arcanine', category: 'noble', label: 'Nobre: Arcanine', trainer: '', roster: ['arcanine-hisui'] },
+          { id: 'noble-electrode', category: 'noble', label: 'Nobre: Electrode', trainer: '', roster: ['electrode-hisui'] },
+          { id: 'noble-avalugg', category: 'noble', label: 'Nobre: Avalugg', trainer: '', roster: ['avalugg-hisui'] },
+        ],
+        'scarlet-violet': [
+          { id: 'gym-1-katy', category: 'gym', label: 'Katy', trainer: '', roster: ['nymble', 'tarountula', 'teddiursa'] },
+          { id: 'gym-2-brassius', category: 'gym', label: 'Brassius', trainer: '', roster: ['petilil', 'smoliv', 'sudowoodo'] },
+          { id: 'gym-3-iono', category: 'gym', label: 'Iono', trainer: '', roster: ['wattrel', 'bellibolt', 'luxio', 'mismagius'] },
+          { id: 'gym-4-kofu', category: 'gym', label: 'Kofu', trainer: '', roster: ['veluza', 'wugtrio', 'crabominable'] },
+          { id: 'gym-5-larry', category: 'gym', label: 'Larry', trainer: '', roster: ['komala', 'dudunsparce', 'staraptor'] },
+          { id: 'gym-6-ryme', category: 'gym', label: 'Ryme', trainer: '', roster: ['mimikyu', 'banette', 'houndstone', 'toxtricity'] },
+          { id: 'gym-7-tulip', category: 'gym', label: 'Tulip', trainer: '', roster: ['farigiraf', 'gardevoir', 'espathra'] },
+          { id: 'gym-8-grusha', category: 'gym', label: 'Grusha', trainer: '', roster: ['frosmoth', 'beartic', 'cetitan', 'altaria'] },
+          { id: 'e4-rika', category: 'e4', label: 'Rika', trainer: '', roster: ['whiscash', 'clodsire', 'toedscruel', 'camerupt'] },
+          { id: 'e4-poppy', category: 'e4', label: 'Poppy', trainer: '', roster: ['copperajah', 'magnezone', 'tinkaton', 'corviknight'] },
+          { id: 'e4-larry', category: 'e4', label: 'Larry', trainer: '', roster: ['tropius', 'staraptor', 'altaria', 'flamigo'] },
+          { id: 'e4-hassel', category: 'e4', label: 'Hassel', trainer: '', roster: ['noivern', 'haxorus', 'dragalge', 'baxcalibur'] },
+          { id: 'champion-geeta', category: 'champion', label: 'Geeta', trainer: '', roster: ['espathra', 'gogoat', 'avalugg', 'veluza', 'kingambit', 'glimmora'] },
         ],
       };
 
@@ -3311,6 +3500,45 @@
         return titleFromApiName(c);
       }
 
+      function BossAvatar({ trainerKey, pokemonApiName, fallbackText, alt, className, onTrainerError } = {}) {
+        const trainer = String(trainerKey ?? '').trim().toLowerCase();
+        const apiName = String(pokemonApiName ?? '').trim().toLowerCase();
+        const [failed, setFailed] = useState(false);
+        const { status, data } = usePokemon(trainer ? '' : apiName);
+
+        const trainerSrc = trainer ? trainerSpriteUrl(trainer) : '';
+        const pokemonSrc =
+          !trainer && apiName
+            ? pickBestSprite(data, false) || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${Number.isFinite(data?.id) ? data.id : ''}.png`
+            : '';
+
+        const src = trainerSrc || pokemonSrc;
+        const label = String(alt ?? '');
+        const text = String(fallbackText ?? '').slice(0, 1) || 'B';
+
+        if (!src || failed || (!trainer && apiName && status === 'loading')) {
+          return (
+            <span className={className}>
+              {text}
+            </span>
+          );
+        }
+
+        return (
+          <img
+            src={src}
+            alt={label}
+            className={className}
+            loading="lazy"
+            referrerPolicy="no-referrer"
+            onError={() => {
+              if (trainer && typeof onTrainerError === 'function') onTrainerError();
+              setFailed(true);
+            }}
+          />
+        );
+      }
+
       function BossPicker({ value, onChange, bosses, placeholder = 'Selecionar boss' }) {
         const [open, setOpen] = useState(false);
         const [q, setQ] = useState('');
@@ -3355,8 +3583,6 @@
         const maxIndex = Array.isArray(filtered) ? filtered.length : 0;
         const clampIndex = (n) => Math.max(0, Math.min(Math.max(0, maxIndex - 1), n));
 
-        const selectedSprite = selected?.trainer && !broken.has(selected.id) ? trainerSpriteUrl(selected.trainer) : '';
-
         return (
           <div ref={ref} className="relative w-full">
             <button
@@ -3365,20 +3591,14 @@
               type="button"
             >
               <span className={`min-w-0 flex items-center gap-2 ${selected ? 'text-zinc-100' : 'text-zinc-400'}`}>
-                {selectedSprite ? (
-                  <img
-                    src={selectedSprite}
-                    alt={selected.label}
-                    className="w-8 h-8 object-contain"
-                    loading="lazy"
-                    referrerPolicy="no-referrer"
-                    onError={() => setBroken((prev) => new Set(prev).add(selected.id))}
-                  />
-                ) : (
-                  <span className="w-8 h-8 rounded-lg border border-zinc-800 bg-zinc-900/30 flex items-center justify-center text-[10px] font-black text-zinc-300">
-                    {selected ? selected.label[0] : 'B'}
-                  </span>
-                )}
+                <BossAvatar
+                  trainerKey={selected?.trainer && !broken.has(selected?.id) ? selected.trainer : ''}
+                  pokemonApiName={(selected?.roster || [])[0] || ''}
+                  fallbackText={selected ? selected.label[0] : 'B'}
+                  alt={selected ? selected.label : 'Boss'}
+                  className="w-8 h-8 rounded-lg border border-zinc-800 bg-zinc-900/30 flex items-center justify-center text-[10px] font-black text-zinc-300 object-contain"
+                  onTrainerError={() => setBroken((prev) => new Set(prev).add(selected.id))}
+                />
                 <span className="truncate text-sm font-semibold">
                   {selected ? `${bossCategoryLabel(selected.category)} • ${selected.label}` : placeholder}
                 </span>
@@ -3423,7 +3643,6 @@
                   {filtered.map((b, idx) => {
                     const active = b.id === value;
                     const highlighted = activeIndex === idx;
-                    const sprite = b?.trainer && !broken.has(b.id) ? trainerSpriteUrl(b.trainer) : '';
                     return (
                       <button
                         key={b.id}
@@ -3440,20 +3659,14 @@
                       >
                         <div className="flex items-center justify-between gap-3">
                           <span className="min-w-0 flex items-center gap-2">
-                            {sprite ? (
-                              <img
-                                src={sprite}
-                                alt={b.label}
-                                className="w-8 h-8 object-contain"
-                                loading="lazy"
-                                referrerPolicy="no-referrer"
-                                onError={() => setBroken((prev) => new Set(prev).add(b.id))}
-                              />
-                            ) : (
-                              <span className="w-8 h-8 rounded-lg border border-zinc-800 bg-zinc-900/30 flex items-center justify-center text-[10px] font-black text-zinc-300">
-                                {b.label[0]}
-                              </span>
-                            )}
+                            <BossAvatar
+                              trainerKey={b?.trainer && !broken.has(b.id) ? b.trainer : ''}
+                              pokemonApiName={(b?.roster || [])[0] || ''}
+                              fallbackText={b.label[0]}
+                              alt={b.label}
+                              className="w-8 h-8 rounded-lg border border-zinc-800 bg-zinc-900/30 flex items-center justify-center text-[10px] font-black text-zinc-300 object-contain"
+                              onTrainerError={() => setBroken((prev) => new Set(prev).add(b.id))}
+                            />
                             <span className="truncate">{b.label}</span>
                           </span>
                           <span className="text-xs text-zinc-500 font-black">{bossCategoryLabel(b.category)}</span>
